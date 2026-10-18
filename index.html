@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SeraNova – Tarlanın suyunu tam zamanında bil</title>
+<meta name="description" content="SeraNova, çiftçilere tarlaya özel hava durumu ve sulama uyarısı gönderen bir uygulamadır.">
+<meta property="og:title" content="SeraNova">
+<meta property="og:description" content="Çiftçilere tarlaya özel hava durumu ve sulama uyarısı.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f6f8;
+    --ink: #14213d;
+    --muted: #55627a;
+    --accent: #3a4bdb;
+    --accent-ink: #ffffff;
+    --panel: #ffffff;
+    --line: #d9e0e8;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  h1, h2, h3, .logo { font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 20px 0; }
+  header .wrap { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 800; font-size: 1.25rem; text-decoration: none; }
+  nav a { margin-left: 24px; text-decoration: none; color: var(--muted); font-weight: 500; }
+  nav a:hover { color: var(--ink); }
+
+  .hero { padding: 88px 0 72px; }
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    max-width: 16ch;
+  }
+  .hero p { font-size: 1.2rem; color: var(--muted); max-width: 52ch; margin-top: 24px; }
+
+  form { display: flex; gap: 10px; margin-top: 36px; flex-wrap: wrap; max-width: 520px; }
+  input[type=email] {
+    flex: 1 1 240px; padding: 14px 16px; font: inherit;
+    border: 1.5px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink);
+  }
+  button {
+    padding: 14px 24px; font: inherit; font-weight: 500; cursor: pointer;
+    border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+  }
+  button:hover { filter: brightness(1.1); }
+  #msg { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
+
+  section { padding: 72px 0; }
+  section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; margin-bottom: 40px; max-width: 20ch; line-height: 1.1; }
+
+  .features { display: grid; gap: 40px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .features h3 { font-size: 1.25rem; margin-bottom: 8px; }
+  .features p { color: var(--muted); }
+
+  .about { background: var(--ink); color: #fff; }
+  .about p { max-width: 60ch; font-size: 1.15rem; color: #c7d0e0; }
+
+  footer { padding: 32px 0; color: var(--muted); font-size: 0.95rem; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 600px) { nav a:not(:last-child) { display: none; } .hero { padding-top: 48px; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#">SeraNova</a>
+    <nav>
+      <a href="#ozellikler">Özellikler</a>
+      <a href="#hakkimizda">Hakkımızda</a>
+      <a href="#iletisim">Bekleme listesi</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="iletisim">
+    <div class="wrap">
+      <h1>Tarlanın ihtiyacı olan suyu tam zamanında bil.</h1>
+      <p>SeraNova, tarlanın bulunduğu yerin hava durumunu takip eder ve ne zaman sulaman gerektiğini telefonuna bildirir.</p>
+
+      <!-- formspree.io'da form oluşturup aşağıdaki adresi kendi adresinle değiştir -->
+      <form id="signup" action="https://formspree.io/f/XXXXXXXX" method="POST">
+        <input type="email" name="email" placeholder="E-posta adresin" required aria-label="E-posta adresi">
+        <button type="submit">Bekleme listesine katıl</button>
+      </form>
+      <p id="msg" role="status"></p>
+    </div>
+  </section>
+
+  <section id="ozellikler">
+    <div class="wrap">
+      <h2>Neden SeraNova?</h2>
+      <div class="features">
+        <div>
+          <h3>Tarlana özel hava durumu</h3>
+          <p>Genel şehir tahmini değil, tarlanın bulunduğu konuma göre saatlik tahmin.</p>
+        </div>
+        <div>
+          <h3>Sulama zamanı uyarısı</h3>
+          <p>Ne zaman sulaman gerektiğini telefonuna bildirim olarak gönderir.</p>
+        </div>
+        <div>
+          <h3>Su ve emekten tasarruf</h3>
+          <p>Gereksiz sulamayı azaltmana yardım eder, don ve kuraklık risklerini önceden haber verir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about" id="hakkimizda">
+    <div class="wrap">
+      <h2>Biz kimiz?</h2>
+      <p>SeraNova, çiftçilerin hava durumunu tahmin etmek yerine kesin bilmesi için kuruldu. Amacımız, her çiftçinin suyunu ve emeğini doğru zamanda kullanmasına yardım etmek.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year"></span> SeraNova</span>
+    <a href="mailto:merhaba@siteadi.com">merhaba@siteadi.com</a>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Formu sayfadan ayrılmadan gönder
+  const form = document.getElementById('signup');
+  const msg = document.getElementById('msg');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = 'Gönderiliyor...';
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' }
+      });
+      if (res.ok) {
+        msg.textContent = 'Teşekkürler! Listeye eklendin.';
+        form.reset();
+      } else {
+        msg.textContent = 'Bir hata oluştu. Lütfen tekrar dene.';
+      }
+    } catch {
+      msg.textContent = 'Bağlantı hatası. Lütfen tekrar dene.';
+    }
+  });
+</script>
+</body>
+</html>
