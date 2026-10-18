@@ -1,172 +1,345 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SeraNova – Tarlanın suyunu tam zamanında bil</title>
-<meta name="description" content="SeraNova, çiftçilere tarlaya özel hava durumu ve sulama uyarısı gönderen bir uygulamadır.">
-<meta property="og:title" content="SeraNova">
-<meta property="og:description" content="Çiftçilere tarlaya özel hava durumu ve sulama uyarısı.">
+<title>SeraNova – Tarlana özel hava durumu ve sulama uyarısı</title>
+<meta name="description" content="SeraNova, tarlanın tam konumuna göre saatlik hava tahmini yapar ve ne zaman sulaman gerektiğini telefonuna bildirir. Bekleme listesine katıl.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #f3f6f8;
-    --ink: #14213d;
-    --muted: #55627a;
-    --accent: #3a4bdb;
-    --accent-ink: #ffffff;
-    --panel: #ffffff;
-    --line: #d9e0e8;
-  }
-  * { box-sizing: border-box; margin: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: Inter, system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    line-height: 1.6;
-  }
-  h1, h2, h3, .logo { font-family: "Bricolage Grotesque", Inter, system-ui, sans-serif; }
-  a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+:root{
+  --soil:#1f2a1c; --leaf:#2f6b3a; --sprout:#7fbf5a; --wheat:#e9d9a6; --water:#2b7fa8;
+  --paper:#f6f4ec; --ink:#1b2218; --mute:#5b6556; --line:#d9d6c6; --warn:#c2571a;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font:17px/1.6 'Instrument Sans',system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+h1,h2,h3{font-family:'Bricolage Grotesque',system-ui,sans-serif;line-height:1.08;letter-spacing:-.02em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--water);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+header{position:sticky;top:0;z-index:20;background:rgba(246,244,236,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:9px;font:800 21px 'Bricolage Grotesque',sans-serif;text-decoration:none;letter-spacing:-.02em}
+.nav ul{display:flex;gap:26px;list-style:none;font-size:15px}
+.nav ul a{text-decoration:none;color:var(--mute)}
+.nav ul a:hover{color:var(--ink)}
+.btn{display:inline-block;background:var(--leaf);color:#fff;font:600 16px 'Instrument Sans',sans-serif;padding:13px 22px;border-radius:999px;border:0;text-decoration:none;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--soil)}
+.btn.sm{padding:9px 18px;font-size:15px}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:#fff}
 
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+/* hero */
+.hero{padding:64px 0 72px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(38px,5.4vw,66px);font-weight:800}
+.hero p.lead{font-size:20px;color:var(--mute);margin:22px 0 30px;max-width:30em}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero small{display:block;margin-top:16px;color:var(--mute);font-size:14px}
+.phone{background:var(--soil);border-radius:34px;padding:14px;max-width:340px;margin:0 auto;box-shadow:0 30px 60px -30px rgba(31,42,28,.55)}
+.screen{background:#e9efe3;border-radius:24px;padding:18px 14px 16px;min-height:470px}
+.clock{text-align:center;font:700 13px 'Instrument Sans';color:var(--mute);margin-bottom:12px}
+.notif{background:#fff;border-radius:16px;padding:13px 14px;margin-bottom:10px;font-size:14px;line-height:1.45;box-shadow:0 1px 0 rgba(0,0,0,.05)}
+.notif b{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute);font-weight:600;margin-bottom:3px}
+.notif strong{display:block;font-size:15px}
+.notif.alert{border-left:5px solid var(--water)}
+.notif.frost{border-left:5px solid var(--warn)}
+.hours{background:var(--soil);color:#e8ecdf;border-radius:16px;padding:12px 10px;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;text-align:center;font-size:12px;margin-top:12px}
+.hours span{display:block;color:#9fb394;font-size:11px}
+.hours em{font-style:normal;font-weight:700;font-size:15px;display:block;margin:4px 0}
+.hours i{display:block;height:5px;border-radius:3px;background:var(--water);margin:5px 6px 0}
+.place{font-size:12.5px;color:var(--mute);text-align:center;margin-top:12px}
 
-  header { padding: 20px 0; }
-  header .wrap { display: flex; justify-content: space-between; align-items: center; }
-  .logo { font-weight: 800; font-size: 1.25rem; text-decoration: none; }
-  nav a { margin-left: 24px; text-decoration: none; color: var(--muted); font-weight: 500; }
-  nav a:hover { color: var(--ink); }
+/* sections */
+section{padding:84px 0}
+.tag{display:inline-block;font-size:14px;color:var(--leaf);font-weight:600;margin-bottom:12px}
+h2{font-size:clamp(30px,4vw,46px);font-weight:700;max-width:18em}
+.sub{color:var(--mute);margin-top:14px;max-width:36em}
+.band{background:var(--soil);color:#eef1e6}
+.band .sub{color:#aebba1}.band .tag{color:var(--sprout)}
 
-  .hero { padding: 88px 0 72px; }
-  .hero h1 {
-    font-size: clamp(2.4rem, 6vw, 4.5rem);
-    line-height: 1.05;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    max-width: 16ch;
-  }
-  .hero p { font-size: 1.2rem; color: var(--muted); max-width: 52ch; margin-top: 24px; }
+.problem{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:44px;border-top:1px solid #3c4a38}
+.problem div{padding:28px 26px 0 0}
+.problem h3{font-size:22px;margin-bottom:8px}
+.problem p{color:#aebba1;font-size:16px}
 
-  form { display: flex; gap: 10px; margin-top: 36px; flex-wrap: wrap; max-width: 520px; }
-  input[type=email] {
-    flex: 1 1 240px; padding: 14px 16px; font: inherit;
-    border: 1.5px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink);
-  }
-  button {
-    padding: 14px 24px; font: inherit; font-weight: 500; cursor: pointer;
-    border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
-  }
-  button:hover { filter: brightness(1.1); }
-  #msg { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
+.steps{margin-top:46px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px;counter-reset:s}
+.step{border-top:3px solid var(--leaf);padding-top:18px;counter-increment:s}
+.step::before{content:counter(s);font:800 40px 'Bricolage Grotesque';color:var(--leaf);display:block;line-height:1;margin-bottom:10px}
+.step h3{font-size:22px;margin-bottom:8px}
+.step p{color:var(--mute);font-size:16px}
 
-  section { padding: 72px 0; }
-  section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; margin-bottom: 40px; max-width: 20ch; line-height: 1.1; }
+/* demo */
+.demo{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:30px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px}
+fieldset{border:0}
+legend{font-weight:600;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.chips input{position:absolute;opacity:0}
+.chips label{padding:9px 16px;border:1.5px solid var(--line);border-radius:999px;cursor:pointer;font-size:15px}
+.chips input:checked+label{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.chips input:focus-visible+label{outline:3px solid var(--water);outline-offset:2px}
+.out{background:#e9efe3;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;min-height:210px}
+.out .k{font-size:13px;color:var(--mute);font-weight:600}
+.out .t{font:700 24px/1.2 'Bricolage Grotesque';margin:8px 0 10px}
+.out .why{font-size:15px;color:var(--mute)}
+.out .meta{display:flex;gap:18px;margin-top:16px;font-size:14px;font-weight:600}
+.note{font-size:13px;color:var(--mute);margin-top:12px}
 
-  .features { display: grid; gap: 40px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .features h3 { font-size: 1.25rem; margin-bottom: 8px; }
-  .features p { color: var(--muted); }
+.feat{margin-top:44px;display:grid;grid-template-columns:repeat(3,1fr);gap:34px 30px}
+.feat h3{font-size:21px;margin-bottom:6px}
+.feat p{color:var(--mute);font-size:16px}
+.feat svg{width:34px;height:34px;margin-bottom:12px;stroke:var(--leaf);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-  .about { background: var(--ink); color: #fff; }
-  .about p { max-width: 60ch; font-size: 1.15rem; color: #c7d0e0; }
+.plans{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:820px}
+.plan{border:1.5px solid var(--line);border-radius:20px;padding:28px;background:#fff}
+.plan.main{border-color:var(--leaf);border-width:2px}
+.plan h3{font-size:24px}
+.plan .p{font:800 34px 'Bricolage Grotesque';margin:10px 0 4px}
+.plan .p small{font:400 15px 'Instrument Sans';color:var(--mute)}
+.plan ul{list-style:none;margin-top:16px;font-size:15.5px}
+.plan li{padding:7px 0;border-top:1px solid var(--line)}
+.plan li::before{content:"✓ ";color:var(--leaf);font-weight:700}
 
-  footer { padding: 32px 0; color: var(--muted); font-size: 0.95rem; }
-  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+details{border-top:1px solid var(--line);padding:18px 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{font:600 18px 'Instrument Sans';cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:20px}
+summary::after{content:"+";font-size:24px;line-height:1;color:var(--leaf)}
+details[open] summary::after{content:"–"}
+details p{color:var(--mute);margin-top:10px;max-width:42em}
+.faq{max-width:780px;margin-top:34px}
 
-  @media (max-width: 600px) { nav a:not(:last-child) { display: none; } .hero { padding-top: 48px; } }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.join{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+form{background:#fff;color:var(--ink);border-radius:20px;padding:28px}
+form label{display:block;font-weight:600;font-size:15px;margin:0 0 6px}
+form input,form select{width:100%;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;margin-bottom:16px}
+form .btn{width:100%}
+.ok{display:none;background:#e9efe3;border-radius:12px;padding:16px;margin-top:14px;font-size:15px}
+.fine{font-size:13px;color:var(--mute);margin-top:12px}
+
+footer{background:#151c13;color:#98a58f;padding:44px 0;font-size:14.5px}
+footer .row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px}
+footer a{color:#cfd8c5}
+
+@media(max-width:860px){
+  .nav ul{display:none}
+  .hero,.join,.demo{grid-template-columns:1fr}
+  .problem,.steps,.feat,.plans{grid-template-columns:1fr}
+  .problem div{padding-bottom:18px}
+  section{padding:60px 0}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="wrap">
-    <a class="logo" href="#">SeraNova</a>
-    <nav>
-      <a href="#ozellikler">Özellikler</a>
-      <a href="#hakkimizda">Hakkımızda</a>
-      <a href="#iletisim">Bekleme listesi</a>
-    </nav>
+  <div class="wrap nav">
+    <a class="logo" href="#" aria-label="SeraNova ana sayfa">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#2f6b3a"/><path d="M16 25c-4.5 0-7-3-7-6.5C9 14.5 16 6 16 6s7 8.500 7 12.500c0 3.500-2.500 6.500-7 6.500z" fill="#e9d9a6"/><path d="M16 24v-8m0 3 3-3m-3 1-3-3" stroke="#2f6b3a" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+      SeraNova
+    </a>
+    <ul>
+      <li><a href="#nasil">Nasıl çalışır</a></li>
+      <li><a href="#deneme">Dene</a></li>
+      <li><a href="#ozellikler">Özellikler</a></li>
+      <li><a href="#fiyat">Fiyat</a></li>
+      <li><a href="#sss">Sık sorulanlar</a></li>
+    </ul>
+    <a class="btn sm" href="#liste">Listeye katıl</a>
   </div>
 </header>
 
 <main>
-  <section class="hero" id="iletisim">
-    <div class="wrap">
-      <h1>Tarlanın ihtiyacı olan suyu tam zamanında bil.</h1>
-      <p>SeraNova, tarlanın bulunduğu yerin hava durumunu takip eder ve ne zaman sulaman gerektiğini telefonuna bildirir.</p>
-
-      <!-- formspree.io'da form oluşturup aşağıdaki adresi kendi adresinle değiştir -->
-      <form id="signup" action="https://formspree.io/f/XXXXXXXX" method="POST">
-        <input type="email" name="email" placeholder="E-posta adresin" required aria-label="E-posta adresi">
-        <button type="submit">Bekleme listesine katıl</button>
-      </form>
-      <p id="msg" role="status"></p>
+<div class="wrap hero">
+  <div>
+    <h1>Tarlanın ihtiyacı olan suyu tam zamanında bil.</h1>
+    <p class="lead">SeraNova, tarlanın bulunduğu noktanın saatlik hava tahminini takip eder ve ne zaman sulaman gerektiğini telefonuna bildirir. Şehir tahmini değil, senin parselin.</p>
+    <div class="cta">
+      <a class="btn" href="#liste">Bekleme listesine katıl</a>
+      <a class="btn ghost" href="#deneme">Nasıl bildirim gelir, gör</a>
     </div>
-  </section>
+    <small>Ücretsiz kayıt. Pilot dönemi için sınırlı sayıda çiftçi alınacak.</small>
+  </div>
+  <div class="phone" role="img" aria-label="SeraNova bildirim örneği">
+    <div class="screen">
+      <div class="clock">Salı · 05:40</div>
+      <div class="notif alert"><b><span>SeraNova</span><span>şimdi</span></b><strong>Bugün sulama günü</strong>Son 6 günde yağış yok, yarın öğleden sonra rüzgâr artıyor. Sulamayı 09:00’dan önce yap.</div>
+      <div class="notif frost"><b><span>SeraNova</span><span>dün 21:15</span></b><strong>Don riski: gece 03:00–06:00</strong>Tahmini en düşük sıcaklık −1°C. Fidanlarını örtmeni öneririz.</div>
+      <div class="hours" aria-hidden="true">
+        <div>06<i style="width:20%"></i><em>9°</em><span>%5</span></div>
+        <div>09<i style="width:20%"></i><em>14°</em><span>%5</span></div>
+        <div>12<i style="width:25%"></i><em>21°</em><span>%10</span></div>
+        <div>15<i style="width:40%"></i><em>25°</em><span>%20</span></div>
+        <div>18<i style="width:60%"></i><em>22°</em><span>%35</span></div>
+        <div>21<i style="width:30%"></i><em>16°</em><span>%15</span></div>
+      </div>
+      <p class="place">Parsel: Iğdır Ovası · 39.92°K 44.04°D</p>
+    </div>
+  </div>
+</div>
 
-  <section id="ozellikler">
-    <div class="wrap">
-      <h2>Neden SeraNova?</h2>
-      <div class="features">
-        <div>
-          <h3>Tarlana özel hava durumu</h3>
-          <p>Genel şehir tahmini değil, tarlanın bulunduğu konuma göre saatlik tahmin.</p>
-        </div>
-        <div>
-          <h3>Sulama zamanı uyarısı</h3>
-          <p>Ne zaman sulaman gerektiğini telefonuna bildirim olarak gönderir.</p>
-        </div>
-        <div>
-          <h3>Su ve emekten tasarruf</h3>
-          <p>Gereksiz sulamayı azaltmana yardım eder, don ve kuraklık risklerini önceden haber verir.</p>
-        </div>
+<section class="band" id="sorun">
+  <div class="wrap">
+    <span class="tag">Neden gerekli</span>
+    <h2>Sulama kararı hâlâ tahmin ve alışkanlıkla veriliyor.</h2>
+    <p class="sub">Telefondaki hava durumu uygulaması ilçe merkezini gösterir. Tarla ise dereye, rüzgâra ve yükseltiye göre farklı davranır.</p>
+    <div class="problem">
+      <div><h3>Gereksiz sulama</h3><p>Yağış gelecekken sulayan çiftçi hem suyu hem elektriği ya da yakıtı boşa harcar.</p></div>
+      <div><h3>Geç kalınan sulama</h3><p>Sıcak dalgası öncesi sulamayı kaçırmak verim kaybı demek. Uyarı çoğu zaman bir gün geç gelir.</p></div>
+      <div><h3>Habersiz don</h3><p>Bahar donu birkaç saat içinde ürünü bitirebilir. Parsele özel uyarı, önlem alma şansı verir.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="nasil">
+  <div class="wrap">
+    <span class="tag">Nasıl çalışır</span>
+    <h2>Konumunu işaretle, ürününü seç, bildirimi bekle.</h2>
+    <div class="steps">
+      <div class="step"><h3>Tarlanı haritada işaretle</h3><p>Parselinin yerini haritadan seçersin. Tahmin ilçeye değil, bu koordinata göre hazırlanır.</p></div>
+      <div class="step"><h3>Ürününü ve toprağını seç</h3><p>Domates, buğday, zeytin, pamuk gibi ürünlerini ve toprak tipini girersin. Sulama aralığı buna göre hesaplanır.</p></div>
+      <div class="step"><h3>Telefonuna bildirim gelsin</h3><p>Sulama zamanı, don ve kuraklık riski geldiğinde kısa ve net bir mesaj alırsın. Her gün uygulamayı açmana gerek kalmaz.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="deneme" style="padding-top:0">
+  <div class="wrap">
+    <span class="tag">Dene</span>
+    <h2>Senin ürünün için bildirim nasıl görünür?</h2>
+    <p class="sub">Aşağıdan ürün ve toprak seç. Örnekler gösterim amaçlıdır; gerçek uyarılar tarlanın tahmin verisine göre oluşur.</p>
+    <div class="demo">
+      <div>
+        <fieldset>
+          <legend>Ürün</legend>
+          <div class="chips" id="crop">
+            <span><input type="radio" name="c" id="c1" value="domates" checked><label for="c1">Domates</label></span>
+            <span><input type="radio" name="c" id="c2" value="bugday"><label for="c2">Buğday</label></span>
+            <span><input type="radio" name="c" id="c3" value="zeytin"><label for="c3">Zeytin</label></span>
+            <span><input type="radio" name="c" id="c4" value="pamuk"><label for="c4">Pamuk</label></span>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Toprak</legend>
+          <div class="chips" id="soil">
+            <span><input type="radio" name="s" id="s1" value="kumlu" checked><label for="s1">Kumlu</label></span>
+            <span><input type="radio" name="s" id="s2" value="tinli"><label for="s2">Tınlı</label></span>
+            <span><input type="radio" name="s" id="s3" value="killi"><label for="s3">Killi</label></span>
+          </div>
+        </fieldset>
+        <p class="note">Kumlu topraklar suyu çabuk bırakır, killi topraklar uzun tutar. Bu yüzden aynı hava için uyarı değişir.</p>
+      </div>
+      <div class="out" aria-live="polite">
+        <span class="k" id="o-k"></span>
+        <div class="t" id="o-t"></div>
+        <p class="why" id="o-w"></p>
+        <div class="meta"><span id="o-a"></span><span id="o-b"></span></div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section class="about" id="hakkimizda">
-    <div class="wrap">
-      <h2>Biz kimiz?</h2>
-      <p>SeraNova, çiftçilerin hava durumunu tahmin etmek yerine kesin bilmesi için kuruldu. Amacımız, her çiftçinin suyunu ve emeğini doğru zamanda kullanmasına yardım etmek.</p>
+<section id="ozellikler" style="padding-top:0">
+  <div class="wrap">
+    <span class="tag">Özellikler</span>
+    <h2>Çiftçinin gerçekten kullanacağı şeyler.</h2>
+    <div class="feat">
+      <div><svg viewBox="0 0 24 24"><path d="M12 21s7-6.200 7-11.500A7 7 0 0 0 5 9.500C5 14.800 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/></svg><h3>Tarlana özel hava durumu</h3><p>Genel şehir tahmini değil, tarlanın bulunduğu konuma göre saatlik tahmin.</p></div>
+      <div><svg viewBox="0 0 24 24"><path d="M12 3s6 6.500 6 11a6 6 0 0 1-12 0c0-4.500 6-11 6-11z"/></svg><h3>Sulama zamanı uyarısı</h3><p>Ne zaman sulaman gerektiğini telefonuna bildirim olarak gönderir.</p></div>
+      <div><svg viewBox="0 0 24 24"><path d="M12 2v20M4.500 6.500l15 11M19.500 6.500l-15 11"/></svg><h3>Don ve kuraklık uyarısı</h3><p>Riskleri önceden haber verir, önlem almak için zaman bırakır.</p></div>
+      <div><svg viewBox="0 0 24 24"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg><h3>Su ve emekten tasarruf</h3><p>Gereksiz sulamayı azaltmana yardım eder. Yağış öncesi sulama yapmazsın.</p></div>
+      <div><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><h3>Basit telefon uygulaması</h3><p>Büyük yazı, kısa cümle. Teknik bilgi gerektirmez.</p></div>
+      <div><svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg><h3>Zayıf internette de çalışır</h3><p>Bildirimler kısa SMS yedeğiyle de iletilebilir. Tarlada çekim sorunu olabilir.</p></div>
     </div>
-  </section>
+  </div>
+</section>
+
+<section class="band" id="fiyat">
+  <div class="wrap">
+    <span class="tag">Fiyat</span>
+    <h2>Pilot dönemde ücretsiz, sonra sezonluk.</h2>
+    <p class="sub">Fiyatlar henüz kesinleşmedi. Bekleme listesindekiler pilot döneminde ücretsiz kullanır ve fiyat belli olunca ilk haberi alır.</p>
+    <div class="plans">
+      <div class="plan"><h3>Pilot</h3><div class="p">₺0 <small>pilot dönemi boyunca</small></div><ul><li>1 tarla</li><li>Sulama ve don uyarıları</li><li>Geri bildirimle ürünü birlikte şekillendiririz</li></ul></div>
+      <div class="plan main" style="color:var(--ink)"><h3>Sezonluk</h3><div class="p">Yakında <small>fiyat açıklanacak</small></div><ul><li>Birden fazla tarla</li><li>SMS yedek bildirim</li><li>Geçmiş sezon karşılaştırması</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="sss">
+  <div class="wrap">
+    <span class="tag">Sık sorulanlar</span>
+    <h2>Merak edilenler</h2>
+    <div class="faq">
+      <details><summary>SeraNova ne zaman çıkacak?</summary><p>Şu an pilot hazırlığındayız. Bekleme listesindeki çiftçilere sırayla davet göndereceğiz. Kayıt olduğunda tahmini tarihi e-postayla paylaşırız.</p></details>
+      <details><summary>Tahminler ne kadar doğru?</summary><p>Hiçbir hava tahmini kesin değildir. Biz tarlanın konumuna göre saatlik tahmin üretiyoruz ve her uyarıda belirsizliği açıkça yazıyoruz. Doğruluk oranını pilot sonunda yayımlayacağız.</p></details>
+      <details><summary>Sensör ya da cihaz almam gerekiyor mu?</summary><p>Hayır. Başlangıçta yalnızca telefon ve tarlanın konumu yeterli. İleride istersen toprak nem sensörü bağlama seçeneği sunmayı planlıyoruz.</p></details>
+      <details><summary>Hangi ürünler destekleniyor?</summary><p>Pilotta domates, buğday, zeytin ve pamukla başlıyoruz. Listeye katılırken ürününü yazarsan sıradaki ürünleri onlara göre seçeriz.</p></details>
+      <details><summary>Verilerim ne oluyor?</summary><p>Tarla konumunu yalnızca tahmin ve uyarı üretmek için kullanırız. Üçüncü kişilere satmayız. Dilediğin zaman hesabını ve verini sildirebilirsin.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="liste">
+  <div class="wrap join">
+    <div>
+      <span class="tag">Bekleme listesi</span>
+      <h2>Pilot için yerini ayırt.</h2>
+      <p class="sub">Birkaç bilgi yeterli. Hangi bölgede ve hangi ürünle çalıştığını bilmek, pilotu doğru yerlerde başlatmamıza yardım eder.</p>
+      <p class="sub" style="margin-top:28px"><strong style="color:#fff">Biz kimiz?</strong><br>SeraNova, çiftçilerin hava durumunu tahmin etmek yerine kesin bilmesi için kuruldu. Amacımız, her çiftçinin suyunu ve emeğini doğru zamanda kullanmasına yardım etmek.</p>
+    </div>
+    <form id="f" novalidate>
+      <label for="ad">Adın</label>
+      <input id="ad" name="ad" autocomplete="name" required>
+      <label for="em">E-posta veya telefon</label>
+      <input id="em" name="em" autocomplete="email" required>
+      <label for="il">İl</label>
+      <input id="il" name="il" placeholder="Örn. Iğdır">
+      <label for="ur">Ana ürünün</label>
+      <select id="ur" name="ur"><option>Domates</option><option>Buğday</option><option>Zeytin</option><option>Pamuk</option><option>Diğer</option></select>
+      <button class="btn" type="submit">Listeye katıl</button>
+      <div class="ok" id="ok" role="status">Kaydın alındı. Pilot açıldığında sana ulaşacağız.</div>
+      <p class="fine">Bilgilerini yalnızca pilot daveti için kullanırız.</p>
+    </form>
+  </div>
+</section>
 </main>
 
 <footer>
-  <div class="wrap">
-    <span>© <span id="year"></span> SeraNova</span>
-    <a href="mailto:merhaba@siteadi.com">merhaba@siteadi.com</a>
+  <div class="wrap row">
+    <div><strong style="color:#fff">SeraNova</strong><br>Tarlana özel hava durumu ve sulama uyarısı.</div>
+    <div>İletişim: <a href="mailto:merhaba@seranova.com">merhaba@seranova.com</a></div>
+    <div>© 2026 SeraNova</div>
   </div>
 </footer>
 
 <script>
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // Formu sayfadan ayrılmadan gönder
-  const form = document.getElementById('signup');
-  const msg = document.getElementById('msg');
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    msg.textContent = 'Gönderiliyor...';
-    try {
-      const res = await fetch(form.action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { Accept: 'application/json' }
-      });
-      if (res.ok) {
-        msg.textContent = 'Teşekkürler! Listeye eklendin.';
-        form.reset();
-      } else {
-        msg.textContent = 'Bir hata oluştu. Lütfen tekrar dene.';
-      }
-    } catch {
-      msg.textContent = 'Bağlantı hatası. Lütfen tekrar dene.';
-    }
-  });
+const D={
+ domates:{n:'Domates',kumlu:['Bugün sulama günü','Kumlu toprak suyu hızlı bırakır; sıcaklık 30°C’ye çıkıyor.','Sabah 07:00 öncesi','Tahmini ihtiyaç: yüksek'],tinli:['Yarın sabah sula','Tınlı toprakta nem 2 gün yeter, ama yarın sıcak dalgası var.','Yarın 07:00–09:00','Tahmini ihtiyaç: orta'],killi:['Bu hafta sulama gerekmiyor','Killi toprak nemi tutuyor, perşembe yağış bekleniyor.','Perşembe yağışı bekle','Tahmini ihtiyaç: düşük']},
+ bugday:{n:'Buğday',kumlu:['2 gün içinde sula','Başaklanma döneminde kumlu toprakta kuruma hızlı.','Akşam serinliğinde','Tahmini ihtiyaç: orta'],tinli:['Sulama için acele yok','Toprak nemi yeterli, hafta sonu hafif yağış var.','Cumartesi’yi bekle','Tahmini ihtiyaç: düşük'],killi:['Sulama yapma','Killi toprak hâlâ nemli. Fazla su kök hastalığı riskini artırır.','Pazartesi yeniden bak','Tahmini ihtiyaç: çok düşük']},
+ zeytin:{n:'Zeytin',kumlu:['Bu hafta derin sulama yap','Meyve tutumu dönemi ve kuru geçen 10 gün var.','Sabah erken','Tahmini ihtiyaç: orta'],tinli:['Sulamayı 4 gün sonraya bırak','Yaprak ve toprak nemi dengede, sıcaklık normal.','Pazar akşamı','Tahmini ihtiyaç: düşük'],killi:['Şimdilik sulama yok','Killi toprakta nem derinde duruyor.','2 hafta sonra kontrol','Tahmini ihtiyaç: çok düşük']},
+ pamuk:{n:'Pamuk',kumlu:['Bugün sulama günü','Çiçeklenme dönemi ve 34°C tahmini var. Su stresi verimi düşürür.','Gün doğmadan','Tahmini ihtiyaç: yüksek'],tinli:['Yarın sula','Sıcak gün sayısı artıyor, toprak nemi azalıyor.','Yarın sabah','Tahmini ihtiyaç: yüksek'],killi:['2 gün sonra sula','Nem hâlâ yeterli; sıcak dalgasından önce planlı sulama iyi olur.','Çarşamba sabahı','Tahmini ihtiyaç: orta']}
+};
+function show(){
+  const c=document.querySelector('input[name=c]:checked').value,s=document.querySelector('input[name=s]:checked').value,d=D[c],v=d[s];
+  document.getElementById('o-k').textContent='SeraNova · '+d.n;
+  document.getElementById('o-t').textContent=v[0];
+  document.getElementById('o-w').textContent=v[1];
+  document.getElementById('o-a').textContent=v[2];
+  document.getElementById('o-b').textContent=v[3];
+}
+document.querySelectorAll('input[name=c],input[name=s]').forEach(i=>i.addEventListener('change',show));
+show();
+document.getElementById('f').addEventListener('submit',e=>{
+  e.preventDefault();
+  const a=document.getElementById('ad'),m=document.getElementById('em');
+  if(!a.value.trim()||!m.value.trim()){(a.value.trim()?m:a).focus();return}
+  /* Buraya kendi backend/form servisinizi bağlayın (Formspree, Supabase, Firebase vb.) */
+  document.getElementById('ok').style.display='block';
+  e.target.reset();
+});
 </script>
 </body>
 </html>
