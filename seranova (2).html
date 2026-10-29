@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seranova – Akıllı Tarım Paneli</title>
+<style>
+:root{
+  --bg:#f3f6f2; --surface:#ffffff; --surface-2:#f8faf7; --border:#e1e8df;
+  --text:#16241a; --muted:#6a7b6e; --primary:#1f8a4c; --primary-2:#14693a; --primary-soft:#e4f4ea;
+  --warn:#d98a0b; --warn-soft:#fdf1da; --danger:#cf3a3a; --danger-soft:#fbe6e6;
+  --info:#2f7fd1; --info-soft:#e4effb; --shadow:0 1px 2px rgba(20,40,25,.05),0 6px 20px rgba(20,40,25,.06);
+  --radius:16px; --sidebar:#0f2a1b;
+}
+[data-theme="dark"]{
+  --bg:#0b140f; --surface:#122019; --surface-2:#16271e; --border:#223529;
+  --text:#e6f0e8; --muted:#8aa08f; --primary:#3fbf74; --primary-2:#2fa760; --primary-soft:#173a27;
+  --warn:#f0a93a; --warn-soft:#3a2d12; --danger:#ef6b6b; --danger-soft:#3a1a1a;
+  --info:#5aa5f0; --info-soft:#13283f; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --sidebar:#08110c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+/* Sidebar */
+.sidebar{background:var(--sidebar);color:#cfe3d5;padding:22px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 10px 22px}
+.brand-logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#3fbf74,#1f8a4c);display:grid;place-items:center;box-shadow:0 4px 14px rgba(63,191,116,.35)}
+.brand-logo svg{width:22px;height:22px}
+.brand h1{font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.1}
+.brand small{font-size:11px;color:#7fa38b}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:#5d806a;padding:14px 12px 6px}
+.nav button{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;color:#b6cfbd;text-align:left;transition:.15s}
+.nav button svg{width:19px;height:19px;flex:none;opacity:.9}
+.nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav button.active{background:linear-gradient(90deg,rgba(63,191,116,.22),rgba(63,191,116,.06));color:#fff;box-shadow:inset 3px 0 0 #3fbf74}
+.nav .badge{margin-left:auto;background:#cf3a3a;color:#fff;font-size:10.5px;padding:1px 7px;border-radius:99px}
+.side-foot{margin-top:auto;background:rgba(255,255,255,.05);border-radius:14px;padding:13px;font-size:12px}
+.side-foot .row{display:flex;align-items:center;gap:8px;color:#cfe3d5}
+.dot{width:8px;height:8px;border-radius:50%;background:#3fbf74;box-shadow:0 0 0 0 rgba(63,191,116,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(63,191,116,0)}100%{box-shadow:0 0 0 0 rgba(63,191,116,0)}}
+.side-foot p{color:#7fa38b;margin-top:6px;font-size:11.5px}
+
+/* Main */
+.main{padding:22px 28px 40px;min-width:0}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.topbar h2{font-size:22px;letter-spacing:-.2px}
+.topbar .sub{color:var(--muted);font-size:13px}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);padding:7px 12px;border-radius:99px;font-size:12.5px;box-shadow:var(--shadow)}
+.icon-btn{width:38px;height:38px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;box-shadow:var(--shadow)}
+.icon-btn svg{width:18px;height:18px}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3fbf74,#2f7fd1);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px}
+.menu-btn{display:none}
+.chip.src{cursor:pointer;font-weight:600}
+.dot.sim{background:var(--info);animation:none}
+.dot.bad{background:var(--danger);animation:none}
+.dot.wait{background:var(--warn);animation:none}
+.pop{position:absolute;right:0;top:46px;width:360px;max-width:92vw;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.22);padding:16px;z-index:50;display:none}
+.pop.open{display:block}
+.pop h4{font-size:14px;margin-bottom:10px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.opt.on{border-color:var(--primary);background:var(--primary-soft)}
+.opt b{display:block;font-size:13px}.opt span{font-size:12px;color:var(--muted)}
+.pop input[type=text]{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font:inherit;font-size:13px;margin:6px 0}
+.pop details{font-size:12px;color:var(--muted);margin-top:8px}
+.pop pre{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:11.5px;overflow:auto;margin-top:6px;color:var(--text)}
+.pop .msg{font-size:12.5px;margin-top:8px;min-height:18px}
+
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.grid{display:grid;gap:16px}
+.g-6{grid-template-columns:repeat(6,1fr)}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.g-2{grid-template-columns:repeat(2,1fr)}
+.g-main{grid-template-columns:2fr 1fr}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.statc .l{font-size:12.5px;color:var(--muted)}
+.statc .n{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-top:4px}
+.statc .n small{font-size:13px;color:var(--muted);font-weight:500;margin-left:3px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card-h h3{font-size:15px;font-weight:650}
+.card-h .hint{margin-left:auto;color:var(--muted);font-size:12px}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px}
+.tag.ok{background:var(--primary-soft);color:var(--primary)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.bad{background:var(--danger-soft);color:var(--danger)}
+.tag.info{background:var(--info-soft);color:var(--info)}
+.demo{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;background:var(--info-soft);color:var(--info);padding:2px 8px;border-radius:6px;font-weight:700}
+
+/* hero */
+.hero{background:linear-gradient(120deg,#14693a 0%,#1f8a4c 55%,#3fbf74 100%);color:#fff;border:none;position:relative;overflow:hidden;display:flex;gap:20px;align-items:center;margin-bottom:16px;padding:22px 26px}
+.hero:after{content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero:before{content:"";position:absolute;right:120px;bottom:-110px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hero h3{font-size:19px;margin-bottom:4px}
+.hero p{opacity:.9;max-width:520px}
+.hero-stats{margin-left:auto;display:flex;gap:26px;z-index:1}
+.hero-stats div{text-align:center}
+.hero-stats b{display:block;font-size:26px;line-height:1.1}
+.hero-stats span{font-size:11.5px;opacity:.85}
+.hero > div:first-child{z-index:1}
+
+/* sensor cards */
+.sensor{padding:15px}
+.sensor .top{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12.5px;margin-bottom:8px}
+.sensor .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.sensor .ic svg{width:17px;height:17px}
+.sensor .val{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.sensor .val small{font-size:12.5px;font-weight:500;color:var(--muted);margin-left:3px}
+.sensor .foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.sensor svg.spark{width:100%;height:34px;margin-top:6px}
+.c-green{background:var(--primary-soft);color:var(--primary)}
+.c-blue{background:var(--info-soft);color:var(--info)}
+.c-amber{background:var(--warn-soft);color:var(--warn)}
+.c-red{background:var(--danger-soft);color:var(--danger)}
+
+/* chart */
+.chart-wrap{position:relative}
+.chart-wrap svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px}
+.seg button{padding:4px 12px;border-radius:7px;font-size:12px;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:600}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.item:last-child{border-bottom:none}
+.item .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.item .ic svg{width:18px;height:18px}
+.item .t{font-weight:600;font-size:13.5px}
+.item .s{color:var(--muted);font-size:12px}
+.item .r{margin-left:auto;text-align:right;font-size:12px;color:var(--muted)}
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),#7fd9a0);transition:width .6s}
+.bar.warn i{background:linear-gradient(90deg,var(--warn),#f6cc7a)}
+.bar.bad i{background:linear-gradient(90deg,var(--danger),#f09a9a)}
+
+/* table */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600}
+td{padding:12px 10px;border-bottom:1px solid var(--border);font-size:13px}
+tr:last-child td{border-bottom:none}
+.tbl-wrap{overflow-x:auto}
+
+/* vision */
+.leaf-stage{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 30% 20%,#2c5a38,#0f2a1b);aspect-ratio:4/3;display:grid;place-items:center}
+.leaf-stage img,.leaf-stage svg.leaf{width:100%;height:100%;object-fit:cover}
+.scan{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#7fffa8,transparent);box-shadow:0 0 18px #7fffa8;animation:scan 3.2s ease-in-out infinite}
+@keyframes scan{0%{top:6%}50%{top:92%}100%{top:6%}}
+.rec{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.55);color:#fff;font-size:11.5px;padding:4px 10px;border-radius:99px;display:flex;align-items:center;gap:7px}
+.rec i{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:pulse 1.4s infinite}
+.bbox{position:absolute;border:2px solid #ffb43a;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.bbox span{position:absolute;top:-22px;left:-2px;background:#ffb43a;color:#2b1c00;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;font-weight:600;font-size:13px;transition:.15s}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.primary:hover{background:var(--primary-2)}
+.btn.ghost{background:var(--surface-2);border:1px solid var(--border)}
+.btn.ghost:hover{border-color:var(--primary)}
+.btn.danger{background:var(--danger-soft);color:var(--danger)}
+.btn svg{width:16px;height:16px}
+
+/* toggle & slider */
+.switch{position:relative;width:48px;height:27px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:.2s;cursor:pointer}
+.switch span:before{content:"";position:absolute;left:3px;top:3px;width:21px;height:21px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch input:checked+span{background:var(--primary)}
+.switch input:checked+span:before{transform:translateX(21px)}
+input[type=range]{width:100%;accent-color:var(--primary)}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.valve{display:flex;align-items:center;gap:16px;padding:16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border)}
+.drop{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:var(--info-soft);color:var(--info)}
+.drop svg{width:28px;height:28px}
+.drop.on{animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+
+/* telegram */
+.chat{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px;height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:82%;padding:9px 13px;border-radius:14px;font-size:13px;white-space:pre-line}
+.msg.bot{background:var(--surface);border:1px solid var(--border);border-top-left-radius:4px;align-self:flex-start}
+.msg.me{background:var(--primary);color:#fff;border-top-right-radius:4px;align-self:flex-end}
+.msg time{display:block;font-size:10.5px;opacity:.6;margin-top:3px}
+.cmds{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+.plant{display:flex;align-items:center;gap:12px;padding:10px 0}
+.plant .em{font-size:22px;width:38px;text-align:center}
+.plant .nm{width:84px;font-weight:600}
+.plant .bar{flex:1}
+.plant .pc{width:42px;text-align:right;font-weight:700}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{font-weight:600;text-align:right}
+.footer-note{margin-top:26px;text-align:center;color:var(--muted);font-size:12px}
+.toast{position:fixed;right:22px;bottom:22px;background:var(--text);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.3);transform:translateY(80px);opacity:0;transition:.3s;z-index:50}
+.toast.show{transform:none;opacity:1}
+
+@media (max-width:1280px){.g-6{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:1000px){
+  .g-4{grid-template-columns:repeat(2,1fr)}
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;width:260px;z-index:40;transform:translateX(-100%);transition:.25s}
+  .sidebar.open{transform:none}
+  .menu-btn{display:grid}
+  .g-main,.g-2,.g-3{grid-template-columns:1fr}
+  .hero{flex-direction:column;align-items:flex-start}
+  .hero-stats{margin-left:0}
+}
+@media (max-width:600px){
+  .main{padding:16px 14px 40px}
+  .g-6{grid-template-columns:repeat(2,1fr)}
+  .sensor .val{font-size:22px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10 0 9-4 17-9 17z"/><path d="M4 21c3-6 6-9 10-12"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V4a3 3 0 0 0-3 0zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.500 6-11 6-11z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+    <symbol id="i-temp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.760V3.500a2 2 0 0 0-4 0v11.260a4 4 0 1 0 4 0z"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-6-10V3"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.900 4.900l1.400 1.400M17.700 17.700l1.400 1.400M2 12h2M20 12h2M4.900 19.100l1.400-1.400M17.700 6.300l1.400-1.400"/></symbol>
+    <symbol id="i-wind" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.600 4.600A2 2 0 1 1 11 8H2M12.600 19.400A2 2 0 1 0 14 16H2M17.700 7.700A2.500 2.500 0 1 1 19.500 12H2"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.800A9 9 0 1 1 11.200 3a7 7 0 0 0 9.800 9.800z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.700 21a2 2 0 0 1-3.400 0"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-signal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10 0 9-4 17-9 17z"/><path d="M4 21c3-6 6-9 10-12"/></svg></div>
+      <div><h1>Seranova</h1><small>Akıllı Tarım Sistemi</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-label">Genel</div>
+      <button data-view="dashboard" class="active"><svg><use href="#i-grid"/></svg>Kontrol Paneli</button>
+      <button data-view="sensors"><svg><use href="#i-chip"/></svg>Sensör Ağı</button>
+      <button data-view="history"><svg><use href="#i-history"/></svg>Geçmiş</button>
+      <div class="nav-label">Yapay Zekâ</div>
+      <button data-view="vision"><svg><use href="#i-leaf"/></svg>Hastalık Tespiti</button>
+      <button data-view="ai"><svg><use href="#i-brain"/></svg>Tahmin &amp; Öneri</button>
+      <div class="nav-label">Kontrol</div>
+      <button data-view="irrigation"><svg><use href="#i-drop"/></svg>Sulama</button>
+      <button data-view="telegram"><svg><use href="#i-send"/></svg>Telegram Bot<span class="badge" id="notifBadge">3</span></button>
+    </nav>
+    <div class="side-foot">
+      <div class="row"><span class="dot"></span><b>Sistem çevrimiçi</b></div>
+      <p>Raspberry Pi 4 · LoRa ağ geçidi aktif</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Menü"><svg><use href="#i-menu"/></svg></button>
+      <div>
+        <h2 id="pageTitle">Kontrol Paneli</h2>
+        <div class="sub" id="pageSub">Sera genel durumu ve canlı sensör verileri</div>
+      </div>
+      <div class="top-actions">
+        <div style="position:relative">
+          <button class="chip src" id="srcBtn" aria-haspopup="true"><span class="dot sim" id="srcDot"></span><span id="srcTxt">Simülasyon</span><span style="opacity:.6">▾</span></button>
+          <div class="pop" id="srcPop">
+            <h4>Veri kaynağı</h4>
+            <label class="opt on" data-m="sim"><input type="radio" name="srcm" value="sim" checked hidden><div><b>Simülasyon (test)</b><span>Gerçekçi sahte sera verisi üretir. Sunucu gerekmez.</span></div></label>
+            <label class="opt" data-m="api"><input type="radio" name="srcm" value="api" hidden><div><b>Raspberry Pi API (gerçek veri)</b><span>Aşağıdaki adresten JSON okur.</span></div></label>
+            <div id="apiBox" style="display:none">
+              <input type="text" id="apiUrl" placeholder="https://adres/api/latest" spellcheck="false">
+              <div style="display:flex;gap:8px"><button class="btn ghost" id="apiTest" type="button">Bağlantıyı dene</button><button class="btn primary" id="srcSave" type="button">Kaydet</button></div>
+            </div>
+            <div class="msg" id="srcMsg"></div>
+            <details><summary>API'den beklenen JSON</summary><pre>{
+  "ph": 6.4, "ec": 2.2, "moist": 61,
+  "temp": 24.6, "light": 38, "gas": 620,
+  "rssi": -92
+}</pre><div style="margin-top:6px">Not: Site https üzerinden açıldığında API adresi de https olmalı ve CORS izni vermelidir.</div></details>
+          </div>
+        </div>
+        <span class="chip"><span id="clock">--:--:--</span></span>
+        <span class="chip"><svg width="15" height="15"><use href="#i-signal"/></svg> LoRa <b id="loraTop">-92 dBm</b></span>
+        <button class="icon-btn" id="themeBtn" aria-label="Tema"><svg><use href="#i-moon"/></svg></button>
+        <button class="icon-btn" aria-label="Bildirimler" onclick="go('telegram')"><svg><use href="#i-bell"/></svg></button>
+        <div class="avatar" title="Lütfü Karakeçili">LK</div>
+      </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="card hero">
+        <div>
+          <h3>Sera 1 – Domates Bölümü</h3>
+          <p>Veriler ESP32-S3 düğümlerinden LoRa ile alınıyor, Raspberry Pi üzerindeki modellerle gerçek zamanlı analiz ediliyor.</p>
+        </div>
+        <div class="hero-stats">
+          <div><b id="heroHealth">94%</b><span>Bitki sağlığı</span></div>
+          <div><b id="heroNodes">3/3</b><span>Aktif düğüm</span></div>
+          <div><b id="heroWater">38 L</b><span>Bugünkü su</span></div>
+        </div>
+      </div>
+
+      <div class="grid g-6" id="sensorGrid" style="margin-bottom:16px"></div>
+
+      <div class="grid g-main" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-h">
+            <h3>Canlı Sensör Trendi</h3>
+            <div class="seg" id="metricSeg" style="margin-left:auto"></div>
+          </div>
+          <div class="chart-wrap" id="mainChart"></div>
+          <div class="legend" style="margin-top:8px"><span><i style="background:var(--primary)"></i>Ölçüm</span><span><i style="background:var(--primary-soft);border:1px solid var(--primary)"></i>İdeal aralık</span></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Yapay Zekâ Özeti</h3><span class="demo">Demo</span></div>
+          <div class="list">
+            <div class="item"><div class="ic c-green"><svg><use href="#i-leaf"/></svg></div><div><div class="t">Bitki sağlığı</div><div class="s">CNN · MobileNetV2</div></div><div class="r"><span class="tag ok">Sağlıklı</span></div></div>
+            <div class="item"><div class="ic c-blue"><svg><use href="#i-drop"/></svg></div><div><div class="t">Sulama kararı</div><div class="s" id="aiIrrText">Nem eşik üstünde</div></div><div class="r"><span class="tag info" id="aiIrrTag">Beklet</span></div></div>
+            <div class="item"><div class="ic c-amber"><svg><use href="#i-brain"/></svg></div><div><div class="t">Büyüme tahmini</div><div class="s">LSTM · 7 günlük</div></div><div class="r"><b style="color:var(--text)">+12.4 cm</b></div></div>
+            <div class="item"><div class="ic c-green"><svg><use href="#i-flask"/></svg></div><div><div class="t">Önerilen bitki</div><div class="s">Toprak koşullarına göre</div></div><div class="r"><b style="color:var(--text)" id="aiTopPlant">Domates</b></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-h"><h3>Son Olaylar</h3><span class="hint">Bugün</span></div>
+          <div class="list" id="eventList"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Sulama Durumu</h3><span class="hint" id="dashMode">Otomatik mod</span></div>
+          <div class="valve">
+            <div class="drop" id="dashDrop"><svg><use href="#i-drop"/></svg></div>
+            <div><div style="font-weight:700;font-size:16px" id="dashValve">Vana kapalı</div><div class="s" style="color:var(--muted);font-size:12.5px" id="dashValveSub">Toprak nemi hedef aralıkta</div></div>
+            <button class="btn primary" style="margin-left:auto" onclick="go('irrigation')">Yönet</button>
+          </div>
+          <div style="margin-top:16px">
+            <div class="row-between" style="margin-bottom:6px"><span style="color:var(--muted)">Toprak nemi / hedef</span><b id="dashMoist">62% / 60%</b></div>
+            <div class="bar"><i id="dashMoistBar" style="width:62%"></i></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SENSORS -->
+    <section class="view" id="view-sensors">
+      <div class="grid g-3" style="margin-bottom:16px">
+        <div class="card"><div class="card-h"><h3>LoRa Ağ Geçidi</h3><span class="tag ok" style="margin-left:auto">Çevrimiçi</span></div>
+          <dl class="kv"><dt>Donanım</dt><dd>Raspberry Pi 4 · SX1262</dd><dt>Frekans</dt><dd>868 MHz (EU868)</dd><dt>Paket başarı oranı</dt><dd id="pdr">98.6%</dd><dt>Kayıt (SQLite)</dt><dd id="dbCount">12 480 satır</dd></dl></div>
+        <div class="card"><div class="card-h"><h3>Veri Akışı</h3></div><div class="chart-wrap" id="rssiChart"></div><div class="legend"><span><i style="background:var(--info)"></i>RSSI (dBm)</span></div></div>
+        <div class="card"><div class="card-h"><h3>Enerji</h3></div>
+          <div class="row-between" style="margin-bottom:6px"><span style="color:var(--muted)">Ortalama pil</span><b>82%</b></div><div class="bar"><i style="width:82%"></i></div>
+          <div class="row-between" style="margin:14px 0 6px"><span style="color:var(--muted)">Güneş paneli</span><b>Şarj oluyor</b></div><div class="bar"><i style="width:64%"></i></div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>Sensör Düğümleri</h3><span class="hint">ESP32-S3 · LoRaWAN</span></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Düğüm</th><th>Konum</th><th>Sensörler</th><th>Sinyal</th><th>Pil</th><th>Son veri</th><th>Durum</th></tr></thead>
+          <tbody id="nodeBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="view-history">
+      <div class="card" style="margin-bottom:16px">
+        <div class="row-between" style="flex-wrap:wrap">
+          <div class="seg" id="hMetric" style="flex-wrap:wrap"></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="seg" id="hRange"><button data-h="24" class="on">24 saat</button><button data-h="168">7 gün</button><button data-h="720">30 gün</button></div>
+            <button class="btn ghost" id="csvBtn" type="button">⬇ CSV indir</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid g-4" id="hStats" style="margin-bottom:16px"></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-h"><h3 id="hTitle">Toprak nemi</h3><span class="hint" id="hSrc"></span></div>
+        <div id="hMsg" style="color:var(--danger);font-size:13px;margin-bottom:8px"></div>
+        <div class="chart-wrap" id="hChart"></div>
+        <div class="legend" style="margin-top:8px"><span><i style="background:var(--primary)"></i>Ölçüm</span><span><i style="background:var(--primary-soft);border:1px solid var(--primary)"></i>İdeal aralık</span></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>Günlük özet</h3><span class="hint" id="hTblMetric"></span></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Tarih</th><th>Ortalama</th><th>En düşük</th><th>En yüksek</th><th>İdeal aralıkta</th></tr></thead><tbody id="hBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- VISION -->
+    <section class="view" id="view-vision">
+      <div class="grid g-main">
+        <div class="card">
+          <div class="card-h"><h3>Kamera Görüntüsü</h3><span class="demo">Demo analiz</span>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <label class="btn ghost" style="cursor:pointer"><svg><use href="#i-upload"/></svg>Görüntü yükle<input type="file" accept="image/*" id="fileInp" hidden></label>
+              <button class="btn primary" id="analyzeBtn"><svg><use href="#i-leaf"/></svg>Analiz et</button>
+            </div>
+          </div>
+          <div class="leaf-stage" id="leafStage">
+            <svg class="leaf" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" id="leafSvg">
+              <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fb36b"/><stop offset="1" stop-color="#2b7a3d"/></linearGradient></defs>
+              <path d="M70 250C60 130 160 40 340 40c10 130-60 220-190 220-30 0-60-3-80-10z" fill="url(#lg)"/>
+              <path d="M80 245C150 170 230 110 330 48" stroke="#a8e0b0" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <g stroke="#a8e0b0" stroke-width="2" fill="none" opacity=".7"><path d="M130 200l30-50M170 170l40-45M210 145l45-30M250 120l10-45M120 215l55 8M165 185l60 12M205 160l60 8"/></g>
+              <circle cx="230" cy="170" r="14" fill="#8c6a2a" opacity=".85"/><circle cx="245" cy="185" r="8" fill="#7a5a22" opacity=".85"/><circle cx="215" cy="190" r="6" fill="#8c6a2a" opacity=".8"/>
+            </svg>
+            <div class="scan"></div>
+            <div class="rec"><i></i>CANLI · Kamera 1</div>
+            <div class="bbox" id="bbox" style="left:50%;top:44%;width:22%;height:26%"><span id="bboxLabel">Yaprak lekesi 87%</span></div>
+          </div>
+          <div class="row-between" style="margin-top:12px;color:var(--muted);font-size:12.5px">
+            <span id="visMeta">Model: MobileNetV2 türevi · Girdi 224×224</span><span id="visTime">Çıkarım: — ms</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Teşhis Sonucu</h3></div>
+          <div style="margin-bottom:14px">
+            <div id="diagName" style="font-size:20px;font-weight:700">Erken yaprak yanıklığı</div>
+            <div style="margin-top:6px"><span class="tag warn" id="diagTag">Dikkat gerekli</span></div>
+          </div>
+          <div id="probList" class="list" style="gap:10px;margin-bottom:14px"></div>
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:13px" id="diagAdvice">
+            <b>Öneri:</b> Etkilenen yaprakları ayırın, sulamayı yaprağa değdirmeden yapın ve nem seviyesini düşürmek için havalandırmayı artırın.
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-h"><h3>Son Taramalar</h3></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Zaman</th><th>Kamera</th><th>Sonuç</th><th>Güven</th><th>Durum</th></tr></thead><tbody id="scanBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section class="view" id="view-ai">
+      <div class="grid g-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-h"><h3>Uygun Bitki Önerisi</h3><span class="hint">pH · EC · nem · sıcaklık</span></div>
+          <div id="plantList"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Büyüme Tahmini (LSTM)</h3>
+            <div class="seg" style="margin-left:auto" id="horizonSeg"><button data-d="7" class="on">7 gün</button><button data-d="14">14 gün</button><button data-d="30">30 gün</button></div>
+          </div>
+          <div class="chart-wrap" id="growthChart"></div>
+          <div class="legend" style="margin-top:8px"><span><i style="background:var(--primary)"></i>Gözlenen</span><span><i style="background:var(--warn)"></i>Tahmin</span></div>
+        </div>
+      </div>
+      <div class="grid g-3">
+        <div class="card"><div class="card-h"><h3>Model: CNN</h3></div><dl class="kv"><dt>Görev</dt><dd>Hastalık sınıflandırma</dd><dt>Doğruluk</dt><dd>%90.2</dd><dt>F1-score</dt><dd>0.89</dd><dt>Veri seti</dt><dd>2 500+ etiketli görüntü</dd></dl></div>
+        <div class="card"><div class="card-h"><h3>Model: LSTM</h3></div><dl class="kv"><dt>Görev</dt><dd>Zaman serisi tahmini</dd><dt>Girdi</dt><dd>pH, EC, nem, sıcaklık</dd><dt>Pencere</dt><dd>48 saat</dd><dt>Son eğitim</dt><dd>10 Mayıs 2026</dd></dl></div>
+        <div class="card"><div class="card-h"><h3>Çıkarım Altyapısı</h3></div><dl class="kv"><dt>Cihaz</dt><dd>Raspberry Pi 4 (4 GB)</dd><dt>Veritabanı</dt><dd>SQLite</dd><dt>İşleme</dt><dd>Python · Pandas/NumPy</dd><dt>Sürüm</dt><dd>v0.1 (prototip)</dd></dl></div>
+      </div>
+    </section>
+
+    <!-- IRRIGATION -->
+    <section class="view" id="view-irrigation">
+      <div class="grid g-main">
+        <div class="card">
+          <div class="card-h"><h3>Sulama Kontrolü</h3><span class="hint">Röle + vana modülü</span></div>
+          <div class="valve" style="margin-bottom:16px">
+            <div class="drop" id="irrDrop"><svg><use href="#i-drop"/></svg></div>
+            <div><div style="font-weight:700;font-size:18px" id="irrValve">Vana kapalı</div><div style="color:var(--muted);font-size:12.5px" id="irrSub">Son sulama: bugün 07:30</div></div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn primary" id="startBtn">Sulamayı başlat</button>
+              <button class="btn danger" id="stopBtn">Durdur</button>
+            </div>
+          </div>
+          <div class="grid g-2">
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px">
+              <div class="row-between"><div><b>Otonom mod</b><div style="color:var(--muted);font-size:12.5px">Yapay zekâ karar verir</div></div>
+                <label class="switch"><input type="checkbox" id="autoSw" checked><span></span></label></div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px">
+              <div class="row-between" style="margin-bottom:8px"><b>Nem eşiği</b><b id="thrVal">60%</b></div>
+              <input type="range" id="thr" min="30" max="85" value="60">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div class="row-between" style="margin-bottom:6px"><span style="color:var(--muted)">Anlık toprak nemi</span><b id="irrMoist">62%</b></div>
+            <div class="bar"><i id="irrMoistBar" style="width:62%"></i></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Karar Gerekçesi</h3><span class="demo">Demo</span></div>
+          <div id="reason" style="font-size:13.5px;line-height:1.65"></div>
+          <div class="card-h" style="margin-top:20px"><h3>Su Kullanımı</h3><span class="hint">Son 7 gün</span></div>
+          <div class="chart-wrap" id="waterChart"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-h"><h3>Sulama Geçmişi</h3></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Zaman</th><th>Tetikleyen</th><th>Süre</th><th>Miktar</th></tr></thead><tbody id="irrBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- TELEGRAM -->
+    <section class="view" id="view-telegram">
+      <div class="grid g-main">
+        <div class="card">
+          <div class="card-h"><h3>@SeranovaBot</h3><span class="tag ok" style="margin-left:auto">Bağlı</span></div>
+          <div class="chat" id="chat"></div>
+          <div class="cmds">
+            <button class="btn ghost" data-cmd="/durum">/durum</button>
+            <button class="btn ghost" data-cmd="/sula">/sula</button>
+            <button class="btn ghost" data-cmd="/rapor">/rapor</button>
+            <button class="btn ghost" data-cmd="/hastalik">/hastalik</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Bildirim Ayarları</h3></div>
+          <div class="list">
+            <div class="item"><div><div class="t">Hastalık uyarısı</div><div class="s">CNN şüpheli sonuç verdiğinde</div></div><div class="r"><label class="switch"><input type="checkbox" checked><span></span></label></div></div>
+            <div class="item"><div><div class="t">Düşük nem uyarısı</div><div class="s">Eşiğin altına düşünce</div></div><div class="r"><label class="switch"><input type="checkbox" checked><span></span></label></div></div>
+            <div class="item"><div><div class="t">Sulama bildirimi</div><div class="s">Başladığında / bittiğinde</div></div><div class="r"><label class="switch"><input type="checkbox" checked><span></span></label></div></div>
+            <div class="item"><div><div class="t">Günlük rapor</div><div class="s">Her akşam 18:00</div></div><div class="r"><label class="switch"><input type="checkbox"><span></span></label></div></div>
+            <div class="item"><div><div class="t">Düğüm çevrimdışı</div><div class="s">LoRa bağlantısı kesilirse</div></div><div class="r"><label class="switch"><input type="checkbox" checked><span></span></label></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note" id="footNote">Seranova v0.1 · Demo sürümü – gösterilen veriler simülasyondur</div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const pad=n=>String(n).padStart(2,'0');
+const cap=s=>s==='pH'?s:s.charAt(0).toUpperCase()+s.slice(1);
+const now=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
+
+/* ---------- navigation ---------- */
+const titles={
+  dashboard:['Kontrol Paneli','Sera genel durumu ve canlı sensör verileri'],
+  sensors:['Sensör Ağı','ESP32-S3 düğümleri ve LoRa bağlantı durumu'],
+  history:['Geçmiş','Sensör verilerinin zaman içindeki seyri'],
+  vision:['Hastalık Tespiti','Kamera ile yaprak analizi (CNN)'],
+  ai:['Tahmin & Öneri','Bitki uygunluğu ve büyüme tahmini'],
+  irrigation:['Sulama','Otonom ve manuel sulama kontrolü'],
+  telegram:['Telegram Bot','Bildirimler ve uzaktan kontrol']
+};
+function go(v){
+  $$('.view').forEach(e=>e.classList.toggle('active',e.id==='view-'+v));
+  $$('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  $('#pageTitle').textContent=titles[v][0];$('#pageSub').textContent=titles[v][1];
+  $('#sidebar').classList.remove('open');
+  if(v==='telegram'){$('#notifBadge').style.display='none'}
+  renderAll();if(v==='history')renderHistory();window.scrollTo({top:0,behavior:'smooth'});
+}
+$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
+$('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');
+$('#themeBtn').onclick=()=>{const d=document.documentElement;const dark=d.dataset.theme==='dark';d.dataset.theme=dark?'light':'dark';renderAll();if($('#view-history').classList.contains('active'))renderHistory(true)};
+
+/* ---------- state ---------- */
+const S={
+  ph:{label:'Toprak pH',unit:'',v:6.4,min:5.5,max:7.2,lo:6.0,hi:6.8,dec:1,icon:'i-flask',cls:'c-green',step:.03},
+  ec:{label:'EC',unit:'mS/cm',v:2.2,min:1.0,max:3.5,lo:1.8,hi:3.0,dec:1,icon:'i-bolt',cls:'c-amber',step:.05},
+  moist:{label:'Toprak nemi',unit:'%',v:62,min:30,max:90,lo:55,hi:80,dec:0,icon:'i-drop',cls:'c-blue',step:.8},
+  temp:{label:'Sıcaklık',unit:'°C',v:24.6,min:15,max:34,lo:18,hi:28,dec:1,icon:'i-temp',cls:'c-red',step:.2},
+  light:{label:'Işık',unit:'klux',v:38,min:0,max:80,lo:0,hi:60,dec:0,icon:'i-sun',cls:'c-amber',step:1.6},
+  gas:{label:'Gaz (CO₂)',unit:'ppm',v:620,min:380,max:1200,lo:400,hi:900,dec:0,icon:'i-wind',cls:'c-green',step:14}
+};
+const H={};Object.keys(S).forEach(k=>{H[k]=[];let v=S[k].v;for(let i=0;i<40;i++){v=clamp(v+rnd(-S[k].step,S[k].step)*2,S[k].min,S[k].max);H[k].push(v)}S[k].v=v});
+let curMetric='moist';
+const irr={auto:true,on:false,thr:60,timer:null,total:38,last:'07:30'};
+const rssiH=Array.from({length:40},()=>rnd(-98,-86));
+const events=[
+  ['i-drop','c-blue','Sulama tamamlandı','Sera 1 · 4 dk · 6.2 L','07:34'],
+  ['i-leaf','c-amber','Yaprak lekesi şüphesi','Kamera 1 · %87 güven','09:12'],
+  ['i-send','c-blue','Telegram raporu gönderildi','Sabah özeti','09:15'],
+  ['i-signal','c-green','Düğüm-2 yeniden bağlandı','RSSI -97 dBm','11:03']
+];
+const scans=[
+  ['10:42','Kamera 1','Erken yaprak yanıklığı','87%','warn'],
+  ['10:12','Kamera 1','Sağlıklı','96%','ok'],
+  ['09:42','Kamera 2','Sağlıklı','94%','ok'],
+  ['09:12','Kamera 1','Yaprak lekesi şüphesi','81%','warn'],
+  ['08:42','Kamera 2','Sağlıklı','97%','ok']
+];
+const irrHist=[
+  ['Bugün 07:30','Otonom (nem 54%)','4 dk','6.2 L'],
+  ['Dün 18:10','Manuel (Telegram)','6 dk','9.0 L'],
+  ['Dün 07:25','Otonom (nem 52%)','5 dk','7.5 L'],
+  ['2 gün önce 07:40','Otonom (nem 55%)','4 dk','6.0 L']
+];
+const nodes=[
+  ['Düğüm-1','Sera 1 · Ön','pH, EC, nem, sıcaklık',-88,87,'şimdi','ok'],
+  ['Düğüm-2','Sera 1 · Arka','nem, ışık, gaz',-97,79,'12 sn önce','warn'],
+  ['Düğüm-3','Sera 2','nem, sıcaklık, pH',-91,80,'8 sn önce','ok']
+];
+const plants=[
+  {n:'Domates',e:'🍅',ph:[6.0,6.8],ec:[2.0,3.5],m:[60,80],t:[18,27]},
+  {n:'Biber',e:'🌶️',ph:[6.0,6.8],ec:[1.0,2.5],m:[55,75],t:[20,30]},
+  {n:'Salatalık',e:'🥒',ph:[5.8,6.8],ec:[1.5,2.5],m:[65,85],t:[20,28]},
+  {n:'Patlıcan',e:'🍆',ph:[5.8,6.8],ec:[1.5,2.5],m:[55,75],t:[22,30]},
+  {n:'Çilek',e:'🍓',ph:[5.5,6.5],ec:[1.0,1.5],m:[60,75],t:[15,25]},
+  {n:'Marul',e:'🥬',ph:[6.0,7.0],ec:[0.8,1.8],m:[60,80],t:[10,20]}
+];
+let horizon=7;
+
+/* ---------- charts ---------- */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function lineChart(el,series,opt={}){
+  const w=640,h=opt.h||220,p={l:38,r:12,t:12,b:22};
+  const all=series.flatMap(s=>s.data);let mn=opt.min??Math.min(...all),mx=opt.max??Math.max(...all);
+  if(mn===mx){mn-=1;mx+=1}const padv=(mx-mn)*.08;if(opt.min===undefined)mn-=padv;if(opt.max===undefined)mx+=padv;
+  const n=Math.max(...series.map(s=>s.len||s.data.length));
+  const X=i=>p.l+(w-p.l-p.r)*(i/(n-1)),Y=v=>p.t+(h-p.t-p.b)*(1-(v-mn)/(mx-mn));
+  let g='';
+  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=Y(v);g+=`<line x1="${p.l}" x2="${w-p.r}" y1="${y}" y2="${y}" stroke="${css('--border')}"/><text x="${p.l-6}" y="${y+4}" text-anchor="end" font-size="10.5" fill="${css('--muted')}">${v.toFixed(opt.dec??1)}</text>`}
+  if(opt.band){const y1=Y(Math.min(opt.band[1],mx)),y2=Y(Math.max(opt.band[0],mn));g+=`<rect x="${p.l}" y="${y1}" width="${w-p.l-p.r}" height="${Math.max(0,y2-y1)}" fill="${css('--primary-soft')}" opacity=".7"/>`}
+  if(opt.xl){opt.xl.forEach((t,i)=>{const x=p.l+(w-p.l-p.r)*(i/(opt.xl.length-1));g+=`<text x="${x}" y="${h-6}" text-anchor="${i===0?'start':i===opt.xl.length-1?'end':'middle'}" font-size="10.5" fill="${css('--muted')}">${t}</text>`})}
+  series.forEach((s,si)=>{
+    const col=s.color,pts=s.data.map((v,i)=>[X((s.off||0)+i),Y(v)]);
+    const d=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+    if(s.area){g+=`<path d="${d} L${pts[pts.length-1][0]} ${h-p.b} L${pts[0][0]} ${h-p.b} Z" fill="${col}" opacity=".12"/>`}
+    g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" ${s.dash?'stroke-dasharray="6 5"':''}/>`;
+    if(s.dot){const l=pts[pts.length-1];g+=`<circle cx="${l[0]}" cy="${l[1]}" r="4.5" fill="${col}" stroke="${css('--surface')}" stroke-width="2"/>`}
+  });
+  el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img">${g}</svg>`;
+}
+function spark(data,col){
+  const w=120,h=34,mn=Math.min(...data),mx=Math.max(...data),r=(mx-mn)||1;
+  const pts=data.map((v,i)=>[w*i/(data.length-1),h-3-(h-6)*(v-mn)/r]);
+  const d=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d} L${w} ${h} L0 ${h} Z" fill="${col}" opacity=".12"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg>`;
+}
+function barChart(el,vals,labels,color){
+  const w=420,h=150,p=22,bw=(w-p*2)/vals.length,mx=Math.max(...vals)*1.15;
+  let g='';vals.forEach((v,i)=>{const bh=(h-34)*v/mx,x=p+i*bw+bw*.18,y=h-20-bh;
+    g+=`<rect x="${x}" y="${y}" width="${bw*.64}" height="${bh}" rx="6" fill="${color}" opacity="${i===vals.length-1?1:.55}"/><text x="${x+bw*.32}" y="${h-6}" text-anchor="middle" font-size="10.5" fill="${css('--muted')}">${labels[i]}</text><text x="${x+bw*.32}" y="${y-5}" text-anchor="middle" font-size="10.5" fill="${css('--text')}">${v}</text>`});
+  el.innerHTML=`<svg viewBox="0 0 ${w} ${h}">${g}</svg>`;
+}
+
+/* ---------- status ---------- */
+function status(k){const s=S[k];if(s.v<s.lo)return['bad','Düşük'];if(s.v>s.hi)return['bad','Yüksek'];
+  const m=(s.hi-s.lo)*.12;if(s.v<s.lo+m||s.v>s.hi-m)return['warn','Sınırda'];return['ok','İdeal']}
+const colOf=k=>css({ph:'--primary',ec:'--warn',moist:'--info',temp:'--danger',light:'--warn',gas:'--primary'}[k]);
+
+/* ---------- renderers ---------- */
+function renderSensors(){
+  $('#sensorGrid').innerHTML=Object.keys(S).map(k=>{const s=S[k],st=status(k);
+    return `<div class="card sensor"><div class="top"><div class="ic ${s.cls}"><svg><use href="#${s.icon}"/></svg></div>${s.label}</div>
+    <div class="val">${s.v.toFixed(s.dec)}<small>${s.unit}</small></div>
+    <div class="foot"><span class="tag ${st[0]}">${st[1]}</span><span style="font-size:11px;color:var(--muted)">${s.lo}–${s.hi}</span></div>${spark(H[k].slice(-24),colOf(k))}</div>`}).join('');
+}
+function renderMetricSeg(){
+  $('#metricSeg').innerHTML=Object.keys(S).map(k=>`<button data-k="${k}" class="${k===curMetric?'on':''}">${cap(S[k].label.replace('Toprak ',''))}</button>`).join('');
+  $$('#metricSeg button').forEach(b=>b.onclick=()=>{curMetric=b.dataset.k;renderMetricSeg();renderMainChart()});
+}
+function renderMainChart(){const s=S[curMetric];
+  lineChart($('#mainChart'),[{data:H[curMetric],color:colOf(curMetric),area:true,dot:true}],{band:[s.lo,s.hi],dec:s.dec,xl:['-40 dk','-30','-20','-10','şimdi'],h:230});}
+function renderEvents(){
+  $('#eventList').innerHTML=events.slice().reverse().slice(0,5).map(e=>`<div class="item"><div class="ic ${e[1]}"><svg><use href="#${e[0]}"/></svg></div><div><div class="t">${e[2]}</div><div class="s">${e[3]}</div></div><div class="r">${e[4]}</div></div>`).join('');
+}
+function renderNodes(){
+  $('#nodeBody').innerHTML=nodes.map(n=>`<tr><td><b>${n[0]}</b></td><td>${n[1]}</td><td>${n[2]}</td><td>${n[3]} dBm</td><td><div style="display:flex;align-items:center;gap:8px;min-width:100px"><div class="bar" style="flex:1"><i style="width:${Math.round(n[4])}%"></i></div>${Math.round(n[4])}%</div></td><td>${n[5]}</td><td><span class="tag ${n[6]}">${n[6]==='ok'?'Aktif':n[6]==='bad'?'Çevrimdışı':'Zayıf sinyal'}</span></td></tr>`).join('');
+  lineChart($('#rssiChart'),[{data:rssiH,color:css('--info'),area:true,dot:true}],{dec:0,h:150,xl:['-40 dk','şimdi']});
+}
+function renderVision(){
+  $('#scanBody').innerHTML=scans.map(s=>`<tr><td>${s[0]}</td><td>${s[1]}</td><td>${s[2]}</td><td>${s[3]}</td><td><span class="tag ${s[4]}">${s[4]==='ok'?'Normal':'Uyarı'}</span></td></tr>`).join('');
+}
+const classes=[
+  {n:'Erken yaprak yanıklığı',tag:['warn','Dikkat gerekli'],adv:'Etkilenen yaprakları ayırın, sulamayı yaprağa değdirmeden yapın ve havalandırmayı artırın.'},
+  {n:'Sağlıklı yaprak',tag:['ok','Sağlıklı'],adv:'Herhangi bir hastalık belirtisi bulunmadı. Rutin izlemeye devam edin.'},
+  {n:'Yaprak lekesi (septoria)',tag:['bad','Müdahale önerilir'],adv:'Enfekte yaprakları uzaklaştırın, bitkiler arası mesafeyi artırın ve ziraat mühendisine danışın.'},
+  {n:'Mozaik virüsü şüphesi',tag:['bad','Müdahale önerilir'],adv:'Bitkiyi izole edin ve el/alet hijyenine dikkat edin. Uzman görüşü alın.'}
+];
+function showDiag(idx){
+  const c=classes[idx];let p=classes.map((_,i)=>i===idx?rnd(.78,.96):rnd(.01,.14));
+  const sum=p.reduce((a,b)=>a+b,0);p=p.map(v=>v/sum);
+  $('#diagName').textContent=c.n;$('#diagTag').className='tag '+c.tag[0];$('#diagTag').textContent=c.tag[1];
+  $('#diagAdvice').innerHTML='<b>Öneri:</b> '+c.adv;
+  $('#probList').innerHTML=classes.map((k,i)=>`<div><div class="row-between" style="font-size:12.5px;margin-bottom:4px"><span>${k.n}</span><b>${(p[i]*100).toFixed(1)}%</b></div><div class="bar ${i===idx&&c.tag[0]==='bad'?'bad':i===idx&&c.tag[0]==='warn'?'warn':''}"><i style="width:${p[i]*100}%"></i></div></div>`).join('');
+  $('#bboxLabel').textContent=c.n.split(' ').slice(0,2).join(' ')+' '+Math.round(Math.max(...p)*100)+'%';
+  $('#bbox').style.display=idx===1?'none':'block';
+  $('#visTime').textContent='Çıkarım: '+Math.round(rnd(95,180))+' ms';
+}
+function renderPlants(){
+  const sc=plants.map(pl=>{
+    const f=(v,[a,b])=>v>=a&&v<=b?1:Math.max(0,1-Math.min(Math.abs(v-a),Math.abs(v-b))/((b-a)||1));
+    const s=(f(S.ph.v,pl.ph)+f(S.ec.v,pl.ec)+f(S.moist.v,pl.m)+f(S.temp.v,pl.t))/4;return{...pl,s}}).sort((a,b)=>b.s-a.s);
+  $('#aiTopPlant').textContent=sc[0].n;
+  $('#plantList').innerHTML=sc.map(p=>`<div class="plant"><div class="em">${p.e}</div><div class="nm">${p.n}</div><div class="bar ${p.s<.5?'bad':p.s<.75?'warn':''}"><i style="width:${p.s*100}%"></i></div><div class="pc">${Math.round(p.s*100)}%</div></div>`).join('');
+}
+function renderGrowth(){
+  const obs=[];let h=14;for(let i=0;i<21;i++){h+=rnd(.6,1.1);obs.push(+h.toFixed(1))}
+  const pred=[obs[obs.length-1]];let ph=obs[obs.length-1];for(let i=0;i<horizon;i++){ph+=rnd(.9,1.5)*(1-i/(horizon*3));pred.push(+ph.toFixed(1))}
+  const n=obs.length+horizon;
+  lineChart($('#growthChart'),[{data:obs,color:css('--primary'),len:n},{data:pred,color:css('--warn'),dash:true,len:n,off:obs.length-1,dot:true}],{h:230,dec:0,xl:['-21 gün','bugün','+'+horizon+' gün'].map((t,i)=>t)});
+}
+function renderIrr(){
+  const m=Math.round(S.moist.v);
+  $('#irrMoist').textContent=m+'%';$('#irrMoistBar').style.width=m+'%';
+  $('#dashMoist').textContent=m+'% / '+irr.thr+'%';$('#dashMoistBar').style.width=m+'%';
+  const v=irr.on;
+  $('#irrValve').textContent=v?'Vana açık – sulanıyor':'Vana kapalı';
+  $('#dashValve').textContent=v?'Vana açık':'Vana kapalı';
+  $('#irrDrop').classList.toggle('on',v);$('#dashDrop').classList.toggle('on',v);
+  $('#irrSub').textContent=v?'Akış: 1.5 L/dk':'Son sulama: bugün '+irr.last;
+  $('#dashValveSub').textContent=v?'Sulama devam ediyor':(m<irr.thr?'Nem eşiğin altında':'Toprak nemi hedef aralıkta');
+  $('#dashMode').textContent=irr.auto?'Otomatik mod':'Manuel mod';
+  $('#heroWater').textContent=irr.total.toFixed(0)+' L';
+  const below=m<irr.thr;
+  $('#aiIrrTag').textContent=v?'Sulanıyor':(below&&irr.auto?'Sula':'Beklet');
+  $('#aiIrrText').textContent=below?'Nem eşiğin altında':'Nem eşik üstünde';
+  $('#reason').innerHTML=`<div class="item" style="padding-top:0"><div><div class="t">Toprak nemi</div><div class="s">${m}% (eşik ${irr.thr}%)</div></div><div class="r"><span class="tag ${below?'bad':'ok'}">${below?'Düşük':'Yeterli'}</span></div></div>
+  <div class="item"><div><div class="t">Sıcaklık</div><div class="s">${S.temp.v.toFixed(1)} °C · buharlaşma ${S.temp.v>27?'yüksek':'normal'}</div></div><div class="r"><span class="tag ${S.temp.v>27?'warn':'ok'}">${S.temp.v>27?'Yüksek':'Normal'}</span></div></div>
+  <div class="item"><div><div class="t">Karar</div><div class="s">${irr.auto?(below?'Sulama başlatılacak':'Sulama gerekmiyor'):'Manuel mod – karar kullanıcıda'}</div></div><div class="r"><span class="tag info">${irr.auto?'AI':'Manuel'}</span></div></div>`;
+  barChart($('#waterChart'),[31,36,29,40,34,37,Math.round(irr.total)],['Pzt','Sal','Çar','Per','Cum','Cmt','Bugün'],css('--info'));
+  $('#irrBody').innerHTML=irrHist.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+}
+function renderAll(){renderSensors();renderMainChart();renderEvents();renderNodes();renderVision();renderPlants();renderGrowth();renderIrr()}
+
+/* ---------- irrigation logic ---------- */
+function startIrr(src){
+  if(irr.on)return;irr.on=true;addEvent('i-drop','c-blue','Sulama başladı',src);
+  botSay('💧 Sulama başladı ('+src+').');
+  irr.timer=setInterval(()=>{S.moist.v=clamp(S.moist.v+1.6,S.moist.min,S.moist.max);irr.total+=.4;
+    if(S.moist.v>=irr.thr+8)stopIrr('hedef nem')},1500);renderIrr();
+}
+function stopIrr(why){
+  if(!irr.on)return;irr.on=false;clearInterval(irr.timer);irr.last=now();
+  addEvent('i-drop','c-green','Sulama durdu',why);botSay('✅ Sulama durdu ('+why+').');
+  irrHist.unshift(['Bugün '+now(),why.includes('Telegram')||why==='kullanıcı'?'Manuel':'Otonom ('+Math.round(S.moist.v)+'%)','—',(Math.random()*4+3).toFixed(1)+' L']);
+  irrHist.length=Math.min(irrHist.length,6);renderIrr();
+}
+function addEvent(i,c,t,s){events.push([i,c,t,s,now()]);renderEvents()}
+$('#startBtn').onclick=()=>startIrr('Manuel');
+$('#stopBtn').onclick=()=>stopIrr('kullanıcı');
+$('#autoSw').onchange=e=>{irr.auto=e.target.checked;toast(irr.auto?'Otonom mod açıldı':'Manuel moda geçildi');renderIrr()};
+$('#thr').oninput=e=>{irr.thr=+e.target.value;$('#thrVal').textContent=irr.thr+'%';renderIrr()};
+
+/* ---------- vision events ---------- */
+$('#analyzeBtn').onclick=()=>{toast('Görüntü analiz ediliyor…');setTimeout(()=>{showDiag(Math.floor(Math.random()*classes.length));toast('Analiz tamamlandı')},700)};
+$('#fileInp').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);
+  const st=$('#leafStage');const old=$('#leafSvg');if(old)old.style.display='none';
+  let im=$('#upImg');if(!im){im=document.createElement('img');im.id='upImg';st.insertBefore(im,st.firstChild)}im.src=url;
+  $('#visMeta').textContent='Yüklenen görüntü: '+f.name;$('#analyzeBtn').click();
+};
+
+/* ---------- telegram ---------- */
+const chat=$('#chat');
+function bubble(txt,who){const d=document.createElement('div');d.className='msg '+who;d.innerHTML=txt+'<time>'+now()+'</time>';chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
+function botSay(t){bubble(t,'bot');if(!$('#view-telegram').classList.contains('active')){const b=$('#notifBadge');b.style.display='';b.textContent=(+b.textContent||0)+1}}
+function statusText(){return `📊 Sera 1 durumu\npH: ${S.ph.v.toFixed(1)} · EC: ${S.ec.v.toFixed(1)} mS/cm\nNem: ${Math.round(S.moist.v)}% · Sıcaklık: ${S.temp.v.toFixed(1)} °C\nIşık: ${Math.round(S.light.v)} klux · CO₂: ${Math.round(S.gas.v)} ppm`}
+$$('[data-cmd]').forEach(b=>b.onclick=()=>{
+  const c=b.dataset.cmd;bubble(c,'me');
+  setTimeout(()=>{
+    if(c==='/durum')botSay(statusText());
+    else if(c==='/sula'){if(irr.on)botSay('Sulama zaten devam ediyor.');else startIrr('Telegram')}
+    else if(c==='/rapor')botSay('📄 Günlük rapor\nBugün '+irr.total.toFixed(0)+' L su kullanıldı.\nBitki sağlığı: %94\nAktif düğüm: 3/3');
+    else if(c==='/hastalik')botSay('🌿 Son tarama: '+scans[0][2]+' ('+scans[0][3]+')');
+  },450);
+});
+bubble('Merhaba! Ben Seranova botuyum. Aşağıdaki komutlarla seranızı uzaktan izleyip yönetebilirsiniz.','bot');
+bubble('⚠️ Kamera 1: yaprak lekesi şüphesi (%87). Lütfen kontrol edin.','bot');
+bubble('💧 Sulama tamamlandı · 4 dk · 6.2 L','bot');
+
+/* ---------- horizon seg ---------- */
+$$('#horizonSeg button').forEach(b=>b.onclick=()=>{horizon=+b.dataset.d;$$('#horizonSeg button').forEach(x=>x.classList.toggle('on',x===b));renderGrowth()});
+
+/* ---------- veri katmanı ----------
+   Ekranlar veriyi yalnızca Source.read() üzerinden alır.
+   mode 'sim' : sahte veri üretir (test)
+   mode 'api' : url'den JSON okur (gerçek sistem)            */
+const Source={
+  mode:'sim', url:'', status:'sim',
+  load(){try{const j=JSON.parse(localStorage.getItem('seranova.src')||'{}');if(j.mode==='api'||j.mode==='sim')this.mode=j.mode;if(typeof j.url==='string')this.url=j.url}catch(e){}},
+  save(){try{localStorage.setItem('seranova.src',JSON.stringify({mode:this.mode,url:this.url}))}catch(e){}},
+  async read(){return this.mode==='api'?this.fromApi():this.fromSim()},
+  async fromApi(){
+    if(!this.url)throw new Error('Adres girilmedi');
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),4000);
+    try{
+      const r=await fetch(this.url,{cache:'no-store',signal:ctl.signal});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.json();
+    }finally{clearTimeout(to)}
+  },
+  fromSim(){
+    const d=new Date(),h=d.getHours()+d.getMinutes()/60;
+    const temp=21+5*Math.sin((h-9)*Math.PI/12)+rnd(-.25,.25);
+    const light=Math.max(0,Math.sin((h-6)*Math.PI/12))*52+rnd(-1.5,1.5);
+    const moist=irr.on?S.moist.v:S.moist.v-(0.12+0.012*(temp-20))+rnd(-.1,.1);
+    const rev=(v,m,k,n)=>v+(m-v)*k+rnd(-n,n);
+    return{
+      temp:temp, light:Math.max(0,light), moist:moist,
+      ph:rev(S.ph.v,6.4,.02,.02), ec:rev(S.ec.v,2.3,.02,.03),
+      gas:rev(S.gas.v,600+(light<5?120:0),.04,12),
+      rssi:clamp(rssiH[rssiH.length-1]+rnd(-3,3),-100,-80)
+    };
+  }
+};
+Source.load();
+
+function setSrcChip(){
+  $('#footNote').textContent=Source.mode==='sim'?'Seranova v0.1 · Demo sürümü – gösterilen veriler simülasyondur':'Seranova v0.1 · Canlı veri: Raspberry Pi API';
+  const dot=$('#srcDot'),txt=$('#srcTxt');
+  if(Source.mode==='sim'){dot.className='dot sim';txt.textContent='Simülasyon'}
+  else if(Source.status==='ok'){dot.className='dot';txt.textContent='Canlı veri'}
+  else{dot.className='dot bad';txt.textContent='Bağlantı yok'}
+}
+
+/* sahte olaylar (yalnızca simülasyon modunda) */
+let nodeDown=0;
+function simEvents(){
+  if(Math.random()<1/70){
+    const c=classes[[0,2,3][Math.floor(rnd(0,3))]],conf=Math.round(rnd(81,96));
+    scans.unshift([now(),'Kamera '+(1+Math.floor(rnd(0,2))),c.n,conf+'%','warn']);scans.length=Math.min(scans.length,6);
+    addEvent('i-leaf','c-amber',c.n+' şüphesi','Kamera · %'+conf+' güven');
+    botSay('⚠️ '+c.n+' şüphesi (%'+conf+'). Lütfen kontrol edin.');
+  }
+  if(nodeDown>0){nodeDown--;if(nodeDown===0){nodes[1][6]='warn';addEvent('i-signal','c-green','Düğüm-2 yeniden bağlandı','RSSI '+nodes[1][3]+' dBm');botSay('✅ Düğüm-2 yeniden bağlandı.')}}
+  else if(Math.random()<1/110){nodeDown=6;nodes[1][6]='bad';nodes[1][5]='az önce';addEvent('i-signal','c-red','Düğüm-2 çevrimdışı','LoRa bağlantısı kesildi');botSay('📡 Düğüm-2 çevrimdışı! LoRa bağlantısı kesildi.')}
+}
+function updateNodes(rssi){
+  [[0,4],[1,-6],[2,0]].forEach(([i,o])=>{const n=nodes[i];
+    if(n[6]==='bad'){n[3]=-110;return}
+    n[3]=Math.round(rssi+o+rnd(-2,2));n[5]=i===0?'şimdi':Math.floor(rnd(2,14))+' sn önce';
+    n[4]=Math.max(20,n[4]-0.002);n[6]=n[3]<-95?'warn':'ok'});
+  $('#heroNodes').textContent=nodes.filter(n=>n[6]!=='bad').length+'/3';
+}
+
+async function tick(){
+  let r=null;
+  try{r=await Source.read();Source.status='ok'}catch(e){Source.status='err'}
+  setSrcChip();
+  if(r){
+    Object.keys(S).forEach(k=>{const s=S[k];if(typeof r[k]==='number'&&isFinite(r[k])){s.v=clamp(r[k],s.min,s.max)}H[k].push(s.v);H[k].shift()});
+    const rs=typeof r.rssi==='number'?r.rssi:rssiH[rssiH.length-1];
+    rssiH.push(clamp(rs,-120,-30));rssiH.shift();
+    $('#loraTop').textContent=Math.round(rssiH[rssiH.length-1])+' dBm';
+    if(Source.mode==='sim'){updateNodes(rs);simEvents()}
+    if(irr.auto&&!irr.on&&S.moist.v<irr.thr-2)startIrr('Otonom (AI)');
+  }
+  const act=document.querySelector('.view.active').id;
+  renderSensors();renderPlants();renderIrr();
+  if(act==='view-dashboard')renderMainChart();
+  if(act==='view-sensors')renderNodes();
+  $('#dbCount').textContent=(12480+Math.floor((Date.now()/3000)%5000)).toLocaleString('tr-TR')+' satır';
+}
+
+/* ---------- veri kaynağı penceresi ---------- */
+(function(){
+  const btn=$('#srcBtn'),pop=$('#srcPop'),box=$('#apiBox'),msg=$('#srcMsg'),inp=$('#apiUrl');
+  let pick=Source.mode;
+  function paint(){$$('.opt',pop).forEach(o=>o.classList.toggle('on',o.dataset.m===pick));box.style.display=pick==='api'?'block':'none';inp.value=Source.url}
+  btn.onclick=e=>{e.stopPropagation();pop.classList.toggle('open');pick=Source.mode;paint();msg.textContent=''};
+  document.addEventListener('click',e=>{if(!pop.contains(e.target)&&e.target!==btn)pop.classList.remove('open')});
+  $$('.opt',pop).forEach(o=>o.onclick=ev=>{ev.preventDefault();pick=o.dataset.m;paint();
+    if(pick==='sim'){Source.mode='sim';Source.save();setSrcChip();msg.textContent='Simülasyon açıldı.';toast('Veri kaynağı: simülasyon');tick()}});
+  $('#apiTest').onclick=async()=>{
+    msg.style.color='var(--muted)';msg.textContent='Deneniyor…';
+    const old=[Source.mode,Source.url];Source.mode='api';Source.url=inp.value.trim();
+    try{const r=await Source.read();const keys=['ph','ec','moist','temp','light','gas'].filter(k=>typeof r[k]==='number');
+      msg.style.color='var(--primary)';msg.textContent='Bağlandı ✓  Gelen alanlar: '+(keys.join(', ')||'hiçbiri')}
+    catch(e){msg.style.color='var(--danger)';msg.textContent='Bağlanılamadı: '+(e&&e.message||e)+' (adres, https ve CORS iznini kontrol edin)'}
+    Source.mode=old[0];Source.url=old[1];
+  };
+  $('#srcSave').onclick=()=>{
+    const u=inp.value.trim();if(!u){msg.style.color='var(--danger)';msg.textContent='Önce API adresini girin.';return}
+    Source.mode='api';Source.url=u;Source.save();Source.status='wait';setSrcChip();pop.classList.remove('open');toast('Veri kaynağı: Raspberry Pi API');tick();
+  };
+  setSrcChip();
+})();
+
+/* ---------- geçmiş ekranı ---------- */
+const HM=['ph','ec','moist','temp','light','gas'];
+let hMetric='moist',hHours=24,hData=null;
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function simHistory(hours){
+  const n=200,stepMs=hours*3600000/n,stepH=hours/n,end=Date.now(),R=mulberry(hours*7919+new Date().getDate()),rr=(a,b)=>a+R()*(b-a);
+  const o={ts:[],ph:[],ec:[],moist:[],temp:[],light:[],gas:[],rssi:[]};
+  let moist=68,ph=6.4,ec=2.3,rssi=-92;
+  for(let i=0;i<n;i++){
+    const t=end-(n-1-i)*stepMs,d=new Date(t),h=d.getHours()+d.getMinutes()/60;
+    const temp=21+5*Math.sin((h-9)*Math.PI/12)+rr(-.4,.4);
+    const light=Math.max(0,Math.sin((h-6)*Math.PI/12))*52+rr(-2,2);
+    moist-=(0.5+0.05*(temp-20))*stepH;if(moist<56)moist+=rr(14,18);
+    ph=clamp(ph+(6.4-ph)*.1+rr(-.03,.03),5.5,7.2);ec=clamp(ec+(2.3-ec)*.1+rr(-.05,.05),1,3.5);
+    rssi=clamp(rssi+rr(-2,2),-100,-80);
+    o.ts.push(t);o.ph.push(ph);o.ec.push(ec);o.moist.push(moist);o.temp.push(temp);o.light.push(Math.max(0,light));
+    o.gas.push(600+(light<5?120:0)+rr(-25,25));o.rssi.push(rssi);
+  }
+  return o;
+}
+async function loadHistory(hours){
+  if(Source.mode==='api'){
+    if(!Source.url)throw new Error('API adresi girilmedi');
+    const base=Source.url.replace(/\/api\/latest\/?$/,'').replace(/\/$/,'');
+    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
+    try{const r=await fetch(base+'/api/history?hours='+hours,{cache:'no-store',signal:ctl.signal});
+      if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(to)}
+  }
+  return simHistory(hours);
+}
+function fmtX(ts,hours){const d=new Date(ts);return hours<=24?pad(d.getHours())+':'+pad(d.getMinutes()):d.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}
+async function renderHistory(cached){
+  $('#hMetric').innerHTML=HM.map(k=>`<button data-k="${k}" class="${k===hMetric?'on':''}">${cap(S[k].label.replace('Toprak ',''))}</button>`).join('');
+  $$('#hMetric button').forEach(b=>b.onclick=()=>{hMetric=b.dataset.k;renderHistory(true)});
+  $$('#hRange button').forEach(b=>{b.classList.toggle('on',+b.dataset.h===hHours);b.onclick=()=>{hHours=+b.dataset.h;renderHistory()}});
+  const k=hMetric,s=S[k];
+  $('#hTitle').textContent=s.label+(s.unit?' ('+s.unit+')':'');
+  $('#hSrc').textContent=Source.mode==='api'?'Kaynak: Raspberry Pi API':'Kaynak: simülasyon';
+  $('#hTblMetric').textContent=s.label;
+  if(!cached||!hData){
+    $('#hMsg').textContent='';
+    try{hData=await loadHistory(hHours)}catch(e){hData=null;$('#hMsg').textContent='Geçmiş verisi alınamadı: '+(e&&e.message||e)}
+  }
+  if(!hData||!hData.ts||!hData.ts.length||!Array.isArray(hData[k])){
+    $('#hChart').innerHTML='';$('#hStats').innerHTML='';$('#hBody').innerHTML='';return}
+  const pts=hData.ts.map((t,i)=>[t,hData[k][i]]).filter(p=>typeof p[1]==='number');
+  if(!pts.length){$('#hMsg').textContent='Bu ölçüm için veri yok.';$('#hChart').innerHTML='';return}
+  const v=pts.map(p=>p[1]),avg=v.reduce((a,b)=>a+b,0)/v.length,mn=Math.min(...v),mx=Math.max(...v);
+  const inr=v.filter(x=>x>=s.lo&&x<=s.hi).length/v.length*100,u=s.unit?`<small>${s.unit}</small>`:'';
+  $('#hStats').innerHTML=[['Ortalama',avg.toFixed(s.dec),u],['En düşük',mn.toFixed(s.dec),u],['En yüksek',mx.toFixed(s.dec),u],['İdeal aralıkta',inr.toFixed(0),'<small>%</small>']]
+    .map(a=>`<div class="card statc"><div class="l">${a[0]}</div><div class="n">${a[1]}${a[2]}</div></div>`).join('');
+  const xi=[0,.25,.5,.75,1].map(f=>Math.round((pts.length-1)*f));
+  lineChart($('#hChart'),[{data:v,color:colOf(k),area:true,dot:true}],{band:[s.lo,s.hi],dec:s.dec,xl:xi.map(i=>fmtX(pts[i][0],hHours)),h:300});
+  const days={};pts.forEach(p=>{const d=new Date(p[0]).toLocaleDateString('tr-TR',{day:'2-digit',month:'long',weekday:'short'});(days[d]=days[d]||[]).push(p[1])});
+  $('#hBody').innerHTML=Object.entries(days).reverse().slice(0,10).map(([d,a])=>{
+    const av=a.reduce((x,y)=>x+y,0)/a.length,ir=a.filter(x=>x>=s.lo&&x<=s.hi).length/a.length*100;
+    return `<tr><td><b>${d}</b></td><td>${av.toFixed(s.dec)} ${s.unit}</td><td>${Math.min(...a).toFixed(s.dec)}</td><td>${Math.max(...a).toFixed(s.dec)}</td><td><span class="tag ${ir>=80?'ok':ir>=50?'warn':'bad'}">%${ir.toFixed(0)}</span></td></tr>`}).join('');
+}
+$('#csvBtn').onclick=()=>{
+  if(!hData||!hData.ts){toast('İndirilecek veri yok');return}
+  const K=['ph','ec','moist','temp','light','gas','rssi'],f=v=>typeof v==='number'?v.toFixed(2).replace('.',','):'';
+  const rows=[['Zaman','pH','EC (mS/cm)','Nem (%)','Sicaklik (C)','Isik (klux)','CO2 (ppm)','RSSI (dBm)']];
+  hData.ts.forEach((t,i)=>rows.push([new Date(t).toLocaleString('tr-TR'),...K.map(k=>f(hData[k]&&hData[k][i]))]));
+  const csv='\ufeff'+rows.map(r=>r.join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='seranova_'+(hHours===24?'24saat':hHours===168?'7gun':'30gun')+'.csv';document.body.appendChild(a);a.click();a.remove();toast('CSV indirildi');
+};
+
+/* ---------- live loop ---------- */
+setInterval(()=>{const d=new Date();$('#clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())},1000);
+setInterval(tick,3000);
+
+renderMetricSeg();showDiag(0);renderAll();tick();
+</script>
+</body>
+</html>
