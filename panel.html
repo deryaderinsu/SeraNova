@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seranova – Akıllı Tarım Paneli</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f8a4c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Seranova">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{
   --bg:#f3f6f2; --surface:#ffffff; --surface-2:#f8faf7; --border:#e1e8df;
@@ -296,6 +304,7 @@ input[type=range]{width:100%;accent-color:var(--primary)}
         </div>
         <span class="chip"><span id="clock">--:--:--</span></span>
         <span class="chip"><svg width="15" height="15"><use href="#i-signal"/></svg> LoRa <b id="loraTop">-92 dBm</b></span>
+        <button class="btn primary" id="installBtn" type="button" style="display:none;padding:8px 14px">⬇ Uygulamayı yükle</button>
         <button class="icon-btn" id="themeBtn" aria-label="Tema"><svg><use href="#i-moon"/></svg></button>
         <button class="icon-btn" aria-label="Bildirimler" onclick="go('telegram')"><svg><use href="#i-bell"/></svg></button>
         <div class="avatar" title="Lütfü Karakeçili">LK</div>
@@ -953,6 +962,17 @@ $('#csvBtn').onclick=()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download='seranova_'+(hHours===24?'24saat':hHours===168?'7gun':'30gun')+'.csv';document.body.appendChild(a);a.click();a.remove();toast('CSV indirildi');
 };
+
+/* ---------- uygulama (PWA) ---------- */
+(function(){
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
+  let ev=null;const b=$('#installBtn');
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;b.style.display=''});
+  b.onclick=async()=>{if(!ev)return;ev.prompt();try{await ev.userChoice}catch(e){}ev=null;b.style.display='none'};
+  window.addEventListener('appinstalled',()=>{b.style.display='none';toast('Uygulama yüklendi')});
+})();
 
 /* ---------- live loop ---------- */
 setInterval(()=>{const d=new Date();$('#clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())},1000);
